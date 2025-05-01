@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultrahuman Device Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f7f6; color: #333; } 
+        .container { max-width: 1200px; margin: auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); } 
+        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #fff; } 
+        h1 { text-align: center; color: #0056b3; margin-bottom: 30px; } 
+        h2 { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-top: 0; color: #007bff; } 
+        h3 { color: #333; margin-bottom: 15px; } 
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; } 
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; word-break: break-all; } 
+        th { background-color: #e9ecef; font-weight: bold; } 
+        tr:nth-child(even) { background-color: #f8f9fa; } 
+        .form-group { margin-bottom: 15px; } 
+        label { display: block; margin-bottom: 5px; font-weight: bold; } 
+        input[type="text"], input[type="email"], input[type="date"], select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; } 
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; transition: background-color 0.3s ease; } 
+        button:hover { background-color: #0056b3; } 
+        button.edit-btn { background-color: #ffc107; color: #333; } 
+        button.edit-btn:hover { background-color: #e0a800; } 
+        button.delete-btn { background-color: #dc3545; } 
+        button.delete-btn:hover { background-color: #c82333; } 
+        button.cancel-btn { background-color: #6c757d; } 
+        button.cancel-btn:hover { background-color: #5a6268; } 
+        .error { color: #dc3545; margin-top: 10px; font-weight: bold; } 
+        .success { color: #28a745; margin-top: 10px; font-weight: bold; } 
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; } 
+        .metric-card { border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; background-color: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } 
+        .metric-card h3 { margin-top: 0; font-size: 1.2em; color: #0056b3; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 15px; } 
+        .metric-value { font-size: 1.8em; font-weight: bold; margin-bottom: 5px; color: #333; } 
+        .metric-unit { font-size: 0.9em; color: #555; margin-left: 5px; } 
+        .metric-details { font-size: 0.9em; color: #666; } 
+        canvas { max-width: 100%; height: auto; margin-top: 15px; } 
+        #loading-indicator { text-align: center; padding: 20px; font-size: 1.2em; color: #007bff; display: none; } 
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ultrahuman Ring Device Dashboard</h1>
+
+        <!-- User Management Section -->
+        <div class="section" id="user-management">
+            <h2>User Management</h2>
+            <div id="user-list-section">
+                <h3>Existing Users</h3>
+                <table id="user-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>API Key (Partial)</th>
+                            <th>Access Code</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- User rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                <button id="show-add-user-form">Add New User</button>
+                <div id="user-list-message" class="success"></div>
+            </div>
+
+            <div id="user-form-section" style="display: none;">
+                <h3 id="user-form-title">Add New User</h3>
+                <form id="user-form">
+                    <input type="hidden" id="user-id">
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="api-key">API Key:</label>
+                        <input type="text" id="api-key" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="access-code">Access Code:</label>
+                        <input type="text" id="access-code" required>
+                    </div>
+                    <button type="submit" id="save-user-button">Save User</button>
+                    <button type="button" id="cancel-edit-button" class="cancel-btn">Cancel</button>
+                </form>
+                <div id="user-form-error" class="error"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div class="section" id="dashboard">
+            <h2>Dashboard</h2>
+            <div class="form-group">
+                <label for="user-select">Select User:</label>
+                <select id="user-select">
+                    <option value="">-- Select a User --</option>
+                    <!-- User options will be populated by JavaScript -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date-select">Select Date:</label>
+                <input type="date" id="date-select">
+            </div>
+            <button id="fetch-data-button">Fetch Data</button>
+            <div id="loading-indicator">Loading data...</div>
+            <div id="dashboard-error" class="error"></div>
+
+            <div id="metrics-display" class="metrics-grid" style="margin-top: 20px;">
+                <!-- Metrics will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+    <script>
+        const userApiUrl = "." + "/api/users"; // Relative path prefix
+        const metricsApiUrlBase = "." + "/api/metrics"; // Relative path prefix
+
+        const userTableBody = document.getElementById("user-table").querySelector("tbody");
+        const userSelect = document.getElementById("user-select");
+        const userFormSection = document.getElementById("user-form-section");
+        const userListSection = document.getElementById("user-list-section");
+        const userForm = document.getElementById("user-form");
+        const userFormTitle = document.getElementById("user-form-title");
+        const userIdInput = document.getElementById("user-id");
+        const emailInput = document.getElementById("email");
+        const apiKeyInput = document.getElementById("api-key");
+        const accessCodeInput = document.getElementById("access-code");
+        const userFormError = document.getElementById("user-form-error");
+        const userListMessage = document.getElementById("user-list-message");
+        const showAddUserFormButton = document.getElementById("show-add-user-form");
+        const cancelEditButton = document.getElementById("cancel-edit-button");
+
+        const dateSelect = document.getElementById("date-select");
+        const fetchDataButton = document.getElementById("fetch-data-button");
+        const metricsDisplay = document.getElementById("metrics-display");
+        const dashboardError = document.getElementById("dashboard-error");
+        const loadingIndicator = document.getElementById("loading-indicator");
+
+        let currentChartInstances = {}; // To keep track of chart instances
+
+        // --- Utility Functions ---
+        function displayError(element, message) {
+            element.textContent = message;
+            element.style.display = "block";
+        }
+
+        function clearError(element) {
+            element.textContent = "";
+            element.style.display = "none";
+        }
+
+        function displaySuccess(element, message) {
+            element.textContent = message;
+            element.style.display = "block";
+            setTimeout(() => { element.style.display = "none"; }, 3000); // Hide after 3 seconds
+        }
+
+        // --- User Management Functions ---
+        async function fetchUsers() {
+            try {
+                const response = await fetch(userApiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const users = await response.json();
+                populateUserTable(users);
+                populateUserSelect(users);
+            } catch (error) {
+                console.error("Error fetching users:", error);
+                displayError(userListMessage, `Error loading users: ${error.message}`);
+            }
+        }
+
+        function populateUserTable(users) {
+            userTableBody.innerHTML = ""; // Clear existing rows
+            if (users.length === 0) {
+                userTableBody.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
+                return;
+            }
+            users.forEach(user => {
+                const row = userTableBody.insertRow();
+                const apiKeyPartial = user.api_key ? `${user.api_key.substring(0, 4)}...${user.api_key.substring(user.api_key.length - 4)}` : "N/A";
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.email}</td>
+                    <td>${apiKeyPartial}</td>
+                    <td>${user.access_code}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editUser(${user.id}, '${user.email}', '${user.api_key}', '${user.access_code}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteUser(${user.id})">Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        function populateUserSelect(users) {
+            userSelect.innerHTML = `<option value="">-- Select a User --</option>`; // Clear existing options
+            users.forEach(user => {
+                const option = document.createElement("option");
+                option.value = user.id;
+                option.textContent = `${user.email} (ID: ${user.id})`;
+                userSelect.appendChild(option);
+            });
+        }
+
+        function showUserForm(isEdit = false, id = null, email = ".", apiKey = ".", accessCode = ".") {
+            userForm.reset();
+            userIdInput.value = id || ".";
+            emailInput.value = email;
+            apiKeyInput.value = apiKey;
+            accessCodeInput.value = accessCode;
+            userFormTitle.textContent = isEdit ? "Edit User" : "Add New User";
+            clearError(userFormError);
+            userListSection.style.display = "none";
+            userFormSection.style.display = "block";
+        }
+
+        function hideUserForm() {
+            userFormSection.style.display = "none";
+            userListSection.style.display = "block";
+            userForm.reset();
+            userIdInput.value = ".";
+            clearError(userFormError);
+        }
+
+        async function saveUser(event) {
+            event.preventDefault();
+            clearError(userFormError);
+
+            const id = userIdInput.value;
+            const userData = {
+                email: emailInput.value,
+                api_key: apiKeyInput.value,
+                access_code: accessCodeInput.value
+            };
+
+            const method = id ? "PUT" : "POST";
+            const url = id ? `${userApiUrl}/${id}` : userApiUrl;
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(userData),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
+                }
+
+                hideUserForm();
+                fetchUsers(); // Refresh user list and dropdown
+                displaySuccess(userListMessage, `User ${id ? "updated" : "added"} successfully!`);
+            } catch (error) {
+                console.error("Error saving user:", error);
+                displayError(userFormError, `Error saving user: ${error.message}`);
+            }
+        }
+
+        function editUser(id, email, apiKey, accessCode) {
+            showUserForm(true, id, email, apiKey, accessCode);
+        }
+
+        async function deleteUser(id) {
+            if (!confirm(`Are you sure you want to delete user ID ${id}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${userApiUrl}/${id}`, {
+                    method: "DELETE",
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
+                }
+
+                fetchUsers(); // Refresh user list and dropdown
+                displaySuccess(userListMessage, `User deleted successfully!`);
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                displayError(userListMessage, `Error deleting user: ${error.message}`);
+            }
+        }
+
+        // --- Dashboard Functions ---
+        function setDateToToday() {
+            const today = new Date().toISOString().split("T")[0];
+            dateSelect.value = today;
+        }
+
+        async function fetchMetrics() {
+            const userId = userSelect.value;
+            const date = dateSelect.value;
+
+            clearError(dashboardError);
+            metricsDisplay.innerHTML = "."; // Clear previous metrics
+            destroyCharts(); // Destroy old charts before creating new ones
+
+            if (!userId) {
+                displayError(dashboardError, "Please select a user.");
+                return;
+            }
+            if (!date) {
+                displayError(dashboardError, "Please select a date.");
+                return;
+            }
+
+            loadingIndicator.style.display = "block";
+            fetchDataButton.disabled = true;
+
+            try {
+                const response = await fetch(`${metricsApiUrlBase}/${userId}?date=${date}`);
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
+                }
+
+                if (result.data && result.data.metric_data) {
+                    displayMetrics(result.data.metric_data);
+                } else {
+                    // Handle cases where API returns success but no data (or unexpected structure)
+                    metricsDisplay.innerHTML = `<p>No metric data available for the selected user and date.</p>`;
+                }
+
+            } catch (error) {
+                console.error("Error fetching metrics:", error);
+                displayError(dashboardError, `Error fetching data: ${error.message}`);
+            } finally {
+                loadingIndicator.style.display = "none";
+                fetchDataButton.disabled = false;
+            }
+        }
+
+        function displayMetrics(metricData) {
+            metricsDisplay.innerHTML = "."; // Clear previous content
+            metricData.forEach(metric => {
+                const card = document.createElement("div");
+                card.className = "metric-card";
+                let content = `<h3>${metric.object.title || metric.type.replace("_", " ").toUpperCase()}</h3>`;
+                let canvasId = `chart-${metric.type}-${Date.now()}`;
+
+                // --- Specific Metric Handling ---
+                switch (metric.type) {
+                    case "sleep":
+                        content += `<div class="metric-value">${metric.object.score || "N/A"} <span class="metric-unit">Score</span></div>`;
+                        if (metric.object.details) {
+                            const details = metric.object.details;
+                            content += `<p class="metric-details">Bedtime: ${new Date(details.bedtime_start * 1000).toLocaleTimeString()} - ${new Date(details.bedtime_end * 1000).toLocaleTimeString()}</p>`;
+                            if (details.quick_metrics) {
+                                details.quick_metrics.forEach(qm => {
+                                    content += `<p class="metric-details">${qm.title}: ${qm.display_text} ${qm.unit || "."}</p>`;
+                                });
+                            }
+                            if (details.sleep_stages) {
+                                content += `<h4>Sleep Stages:</h4>`;
+                                content += `<canvas id="${canvasId}"></canvas>`;
+                                // Prepare data for Doughnut chart
+                                const stageLabels = details.sleep_stages.map(s => s.title);
+                                const stageData = details.sleep_stages.map(s => s.percentage);
+                                setTimeout(() => createDoughnutChart(canvasId, stageLabels, stageData), 0); // Render chart after element is in DOM
+                            }
+                            // Could add more charts for hr_graph, hrv_graph, movement_graph, sleep_graph if needed
+                        }
+                        break;
+                    case "hr":
+                    case "temp":
+                    case "hrv": // HRV average is often a key metric
+                    case "night_rhr":
+                        content += `<div class="metric-value">${metric.object.avg ?? metric.object.last_reading ?? "N/A"} <span class="metric-unit">${metric.object.unit || (metric.type === "hrv" ? "ms" : ".")}</span></div>`;
+                        if (metric.object.subtitle) content += `<p class="metric-details">(${metric.object.subtitle})</p>`;
+                        if (metric.object.values && metric.object.values.length > 0) {
+                            content += `<canvas id="${canvasId}"></canvas>`;
+                            const labels = metric.object.values.map(v => new Date(v.timestamp * 1000));
+                            const data = metric.object.values.map(v => v.value);
+                            setTimeout(() => createLineChart(canvasId, labels, data, metric.object.title || metric.type), 0);
+                        }
+                        break;
+                    case "steps":
+                    case "motion": // Assuming motion index
+                        content += `<div class="metric-value">${metric.object.avg ? metric.object.avg.toFixed(0) : "N/A"} <span class="metric-unit">${metric.type === "steps" ? "Steps" : "Index"}</span></div>`;
+                        if (metric.object.subtitle) content += `<p class="metric-details">(${metric.object.subtitle})</p>`;
+                        // Could add chart for values over time if useful
+                        break;
+                    case "recovery": // Recovery Index
+                    case "movement": // Movement Index
+                        content += `<div class="metric-value">${metric.object.score ?? "N/A"} <span class="metric-unit">Index</span></div>`;
+                        if (metric.object.state_title) content += `<p class="metric-details">State: ${metric.object.state_title}</p>`;
+                        break;
+                    // Glucose related metrics (assuming structure from initial doc)
+                    case "glucose": // Assuming this might be an average or latest reading
+                    case "metabolic_score":
+                    case "glucose_variability":
+                    case "average_glucose":
+                    case "hba1c":
+                    case "time_in_target":
+                    case "vo2_max":
+                        // Generic display - adjust if sample provides more structure
+                        content += `<div class="metric-value">${metric.object.value ?? metric.object.score ?? metric.object.avg ?? "N/A"} <span class="metric-unit">${metric.object.unit || ""}</span></div>`;
+                        if (metric.object.title) content += `<p class="metric-details">(${metric.object.title})</p>`;
+                        break;
+                    default:
+                        content += `<p class="metric-details">Data structure not fully recognized for type: ${metric.type}</p>`;
+                        content += `<pre>${JSON.stringify(metric.object, null, 2)}</pre>`; // Show raw data for unrecognized types
+                }
+
+                card.innerHTML = content;
+                metricsDisplay.appendChild(card);
+            });
+        }
+
+        // --- Charting Functions ---
+        function destroyCharts() {
+            Object.values(currentChartInstances).forEach(chart => chart.destroy());
+            currentChartInstances = {};
+        }
+
+        function createLineChart(canvasId, labels, data, label) {
+            const ctx = document.getElementById(canvasId)?.getContext("2d");
+            if (!ctx) return;
+            currentChartInstances[canvasId] = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: "#007bff",
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: "time",
+                            time: {
+                                unit: "hour",
+                                displayFormats: { hour: "HH:mm" }
+                            },
+                            title: { display: true, text: "Time" }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            title: { display: true, text: "Value" }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDoughnutChart(canvasId, labels, data) {
+            const ctx = document.getElementById(canvasId)?.getContext("2d");
+            if (!ctx) return;
+            currentChartInstances[canvasId] = new Chart(ctx, {
+                type: "doughnut",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Sleep Stages",
+                        data: data,
+                        backgroundColor: [
+                            "#0d6efd", // Deep
+                            "#6c757d", // Light
+                            "#198754", // REM
+                            "#ffc107"  // Awake
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || ".";
+                                    if (label) {
+                                        label += ": ";
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed.toFixed(2) + "%";
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        showAddUserFormButton.addEventListener("click", () => showUserForm());
+        cancelEditButton.addEventListener("click", hideUserForm);
+        userForm.addEventListener("submit", saveUser);
+        fetchDataButton.addEventListener("click", fetchMetrics);
+
+        // --- Initial Load ---
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchUsers();
+            setDateToToday();
+        });
+
+    </script>
+</body>
+</html>
+
