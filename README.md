@@ -16,9 +16,9 @@ This dashboard provides:
 
 ---
 
-## 🎯 For Complete Beginners
+## Getting Started
 
-**Never used GitHub or Python before? No problem!** This guide assumes zero technical knowledge.
+This guide provides step-by-step installation instructions for users new to Python development.
 
 ### 🔗 Step 1: Download the Project
 
@@ -79,7 +79,7 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
    ```bash
    source venv/bin/activate
    ```
-   ✅ You should see `(venv)` at the beginning of your terminal prompt.
+   You should see `(venv)` at the beginning of your terminal prompt.
 
 4. **Install required packages:**
    ```bash
@@ -109,7 +109,7 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
    - Go to [python.org/downloads](https://www.python.org/downloads/)
    - Download the latest Python 3.x version for Windows
    - Run the installer
-   - ⚠️ **CRITICAL:** Check **"Add Python to PATH"** during installation
+   - **Important:** Check "Add Python to PATH" during installation
    - Click **"Install Now"**
    - Restart your computer after installation
 
@@ -134,7 +134,7 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
    ```cmd
    venv\Scripts\activate
    ```
-   ✅ You should see `(venv)` at the beginning of your prompt.
+   You should see `(venv)` at the beginning of your prompt.
 
 5. **Install required packages:**
    ```cmd
@@ -153,14 +153,14 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
 
 ---
 
-## 🗄️ Database Setup (Automatic)
+## Database Setup
 
-**Great news: The database is created automatically!** 
+The database is created automatically when you first run the application.
 
-When you first run the dashboard (`python src/main.py`), the application will:
+When you run `python src/main.py` for the first time, the application will:
 
-1. **Create `database.db`** in your project folder automatically
-2. **Set up the user table** with the correct structure:
+1. Create `database.db` in your project folder
+2. Set up the user table with the following structure:
    - `id`: Unique identifier for each user
    - `email`: Your Ultra Human account email
    - `api_key`: Your Ultra Human API key
@@ -180,11 +180,11 @@ CREATE TABLE user (
 );
 ```
 
-**What This Means:**
-- ✅ **No manual database setup required**
-- ✅ **Database file is created on first run**
-- ✅ **Your data stays completely local**
-- ✅ **Database file is automatically excluded from GitHub**
+**Key Points:**
+- No manual database setup required
+- Database file is created on first run
+- Your data stays completely local
+- Database file is automatically excluded from GitHub
 
 ### 🔄 Database Management
 
@@ -217,24 +217,24 @@ copy database.db database_backup.db # Windows
 
 ### 📝 Adding Your Credentials
 
-1. **Start the dashboard** for the first time:
+1. Start the dashboard for the first time:
    ```bash
    python src/main.py
    ```
-   🗄️ **The database.db file will be created automatically!**
+   The database.db file will be created automatically.
 
-2. **Open the dashboard** in your browser: http://localhost:8000
+2. Open the dashboard in your browser: http://localhost:8000
 
-3. **Click "Add New User"**
+3. Click "Add New User"
 
-4. **Enter your information:**
+4. Enter your information:
    - Email: Your Ultra Human account email
    - API Key: The long key you received
    - Access Code: The short code you received
 
-5. **Click "Save User"**
+5. Click "Save User"
 
-✅ **You're now ready to view your data!** Your credentials are securely stored in your local database.
+Your credentials are now securely stored in your local database and you can begin viewing your data.
 
 ---
 
@@ -372,9 +372,9 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
 **"Can't access localhost:8000"**
-- ✅ Make sure the Python script is running without errors
-- ✅ Check if another app is using port 8000
-- ✅ Try restarting the dashboard
+- Make sure the Python script is running without errors
+- Check if another app is using port 8000
+- Try restarting the dashboard
 
 **"No module named 'flask'"**
 ```bash
@@ -400,10 +400,10 @@ pip install -r requirements.txt
 
 ## 🔒 Privacy & Security
 
-- ✅ **All data stays on your machine** - nothing is sent to external servers
-- ✅ **Database file is excluded from GitHub** - your personal data never gets uploaded
-- ✅ **API keys are stored locally** - only you have access
-- ✅ **No cloud dependencies** - works completely offline after setup
+- All data stays on your machine - nothing is sent to external servers
+- Database file is excluded from GitHub - your personal data never gets uploaded
+- API keys are stored locally - only you have access
+- No cloud dependencies - works completely offline after setup
 
 ---
 
