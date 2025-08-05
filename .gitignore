@@ -1,0 +1,43 @@
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Database
+*.db
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code related files and folders
+.claude/
+claude_tools/
+agent_*
+claude_agent_*
+claude_workspace/
+*.claude.md
+CLAUDE.md
+claude_cache/
+claude_temp/
+.claude_*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
