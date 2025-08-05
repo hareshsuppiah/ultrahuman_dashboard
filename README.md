@@ -1,53 +1,73 @@
-# Ultra Human Dashboard
+# Ultra Human Dashboard 🏃‍♂️📊
 
-A Python web dashboard for visualizing and tracking Ultra Human ring data locally.
+A comprehensive Python web dashboard for visualizing and analyzing your Ultra Human ring data locally. Get detailed insights into your sleep, heart rate, HRV, glucose levels, and more!
 
-## What This Project Does
+---
 
-This dashboard allows you to:
-- Pull data from your Ultra Human ring
-- Store and manage your health metrics
-- View your data through a user-friendly web interface
-- Export your metrics in various formats
+## 🚀 What This Project Does
 
-## Prerequisites
+This dashboard provides:
+- **📈 Comprehensive Health Analytics**: Sleep patterns, heart rate, HRV, glucose monitoring, and more
+- **🌙 Advanced Sleep Tracking**: Separate cards for bedtime, wake time, duration, sleep HR, and sleep HRV
+- **📊 Interactive Charts**: Real-time visualizations of your health metrics
+- **📁 Detailed CSV Exports**: Export all your data with individual sleep metrics as separate rows
+- **📅 Multi-Day Analysis**: Compare trends across date ranges
+- **🔒 Privacy-First**: All data stays local on your machine
 
-Before you start, you'll need to have Python installed on your computer. This guide covers both Mac and Windows installation.
+---
 
-## Installation Guide
+## 🎯 For Complete Beginners
 
-### For Mac Users
+**Never used GitHub or Python before? No problem!** This guide assumes zero technical knowledge.
 
-#### Step 1: Install Python (if not already installed)
+### 🔗 Step 1: Download the Project
 
-1. **Check if Python is installed:**
+**Option A: Using GitHub (Recommended)**
+1. Go to: https://github.com/hareshsuppiah/ultrahuman_dashboard
+2. Click the green **"Code"** button
+3. Click **"Download ZIP"**
+4. Extract the ZIP file to your Desktop or Documents folder
+
+**Option B: Using Git (if you have it)**
+```bash
+git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
+```
+
+---
+
+## 🖥️ Installation Guide
+
+### 🍎 For Mac Users
+
+#### Step 1: Install Python
+
+1. **Check if Python is already installed:**
+   - Open **Terminal** (press `Cmd + Space`, type "Terminal", press Enter)
+   - Type: `python3 --version`
+   - If you see a version number like `Python 3.9.7`, you're good! Skip to Step 2.
+
+2. **Install Python (choose ONE method):**
+
+   **Method A: Using Homebrew (Recommended)**
    ```bash
-   python3 --version
-   ```
-   If you see a version number (like `Python 3.9.7`), Python is installed. Skip to Step 2.
-
-2. **Install Python using Homebrew (Recommended):**
-   
-   First, install Homebrew if you don't have it:
-   ```bash
+   # Install Homebrew first (if you don't have it)
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   ```
    
-   Then install Python:
-   ```bash
+   # Then install Python
    brew install python
    ```
 
-   **Alternative: Download from Python.org**
+   **Method B: Download from Python.org**
    - Go to [python.org/downloads](https://www.python.org/downloads/)
    - Download the latest Python 3.x version for macOS
-   - Run the installer and follow the prompts
+   - Double-click the installer and follow the prompts
 
-#### Step 2: Set up the project
+#### Step 2: Set Up the Dashboard
 
-1. **Navigate to the project folder:**
+1. **Open Terminal and navigate to your project folder:**
    ```bash
-   cd /path/to/ultra_human_dashboard
+   cd ~/Desktop/ultrahuman_dashboard-main
+   # (adjust the path based on where you extracted the files)
    ```
 
 2. **Create a virtual environment:**
@@ -59,9 +79,9 @@ Before you start, you'll need to have Python installed on your computer. This gu
    ```bash
    source venv/bin/activate
    ```
-   You should see `(venv)` at the beginning of your terminal prompt.
+   ✅ You should see `(venv)` at the beginning of your terminal prompt.
 
-4. **Install project dependencies:**
+4. **Install required packages:**
    ```bash
    pip install -r requirements.txt
    ```
@@ -71,39 +91,38 @@ Before you start, you'll need to have Python installed on your computer. This gu
    python src/main.py
    ```
 
-6. **Open your browser and go to:**
+6. **Open your web browser and go to:**
    ```
-   http://localhost:5000
+   http://localhost:8000
    ```
 
-### For Windows Users
+### 🪟 For Windows Users
 
-#### Step 1: Install Python (if not already installed)
+#### Step 1: Install Python
 
-1. **Check if Python is installed:**
-   
-   Open Command Prompt (press `Win + R`, type `cmd`, press Enter) and run:
-   ```cmd
-   python --version
-   ```
-   If you see a version number, Python is installed. Skip to Step 2.
+1. **Check if Python is already installed:**
+   - Press `Win + R`, type `cmd`, press Enter to open Command Prompt
+   - Type: `python --version`
+   - If you see a version number, skip to Step 2.
 
 2. **Install Python:**
    - Go to [python.org/downloads](https://www.python.org/downloads/)
    - Download the latest Python 3.x version for Windows
    - Run the installer
-   - **IMPORTANT:** Check "Add Python to PATH" during installation
-   - Click "Install Now"
+   - ⚠️ **CRITICAL:** Check **"Add Python to PATH"** during installation
+   - Click **"Install Now"**
+   - Restart your computer after installation
 
-#### Step 2: Set up the project
+#### Step 2: Set Up the Dashboard
 
-1. **Open Command Prompt or PowerShell:**
+1. **Open Command Prompt:**
    - Press `Win + R`, type `cmd`, press Enter
-   - OR press `Win + X` and select "Windows PowerShell"
+   - Or press `Win + X` and select "Command Prompt"
 
-2. **Navigate to the project folder:**
+2. **Navigate to your project folder:**
    ```cmd
-   cd C:\path\to\ultra_human_dashboard
+   cd C:\Users\YourName\Desktop\ultrahuman_dashboard-main
+   # (adjust the path based on where you extracted the files)
    ```
 
 3. **Create a virtual environment:**
@@ -112,26 +131,12 @@ Before you start, you'll need to have Python installed on your computer. This gu
    ```
 
 4. **Activate the virtual environment:**
-   
-   For Command Prompt:
    ```cmd
    venv\Scripts\activate
    ```
-   
-   For PowerShell:
-   ```powershell
-   venv\Scripts\Activate.ps1
-   ```
-   
-   If you get an execution policy error in PowerShell, run:
-   ```powershell
-   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-   ```
-   Then try activating again.
+   ✅ You should see `(venv)` at the beginning of your prompt.
 
-   You should see `(venv)` at the beginning of your prompt.
-
-5. **Install project dependencies:**
+5. **Install required packages:**
    ```cmd
    pip install -r requirements.txt
    ```
@@ -141,93 +146,233 @@ Before you start, you'll need to have Python installed on your computer. This gu
    python src/main.py
    ```
 
-7. **Open your browser and go to:**
+7. **Open your web browser and go to:**
    ```
-   http://localhost:5000
+   http://localhost:8000
    ```
 
-## Usage
+---
 
-1. **First Time Setup:**
-   - When you first run the dashboard, it will create a database file
-   - Configure your Ultra Human API credentials in the settings
+## 🎯 First Time Setup
 
-2. **Daily Use:**
-   - Activate your virtual environment (Step 3 from installation)
-   - Run `python src/main.py`
-   - Open your browser to `http://localhost:5000`
+### 🔑 Getting Your Ultra Human API Credentials
 
-3. **Stopping the Dashboard:**
-   - Press `Ctrl + C` in the terminal to stop the server
-   - Type `deactivate` to exit the virtual environment
+1. **Contact Ultra Human Support** to request Partnership API access
+2. You'll need:
+   - Your email address
+   - API Key (long string starting with "eyJ...")
+   - Access Code (short code like "ABCD1234")
 
-## Project Structure
+### 📝 Adding Your Credentials
+
+1. **Open the dashboard** in your browser: http://localhost:8000
+2. **Click "Add New User"**
+3. **Enter your information:**
+   - Email: Your Ultra Human account email
+   - API Key: The long key you received
+   - Access Code: The short code you received
+4. **Click "Save User"**
+
+✅ You're now ready to view your data!
+
+---
+
+## 💡 How to Use the Dashboard
+
+### 📊 Viewing Your Data
+
+1. **Select yourself** from the user dropdown
+2. **Choose your view:**
+   - **Single Day**: See detailed metrics for one specific day
+   - **Date Range**: Compare trends across multiple days (up to 30 days)
+3. **Pick your date(s)** and click **"Fetch Data"**
+
+### 🌙 Sleep Analysis Features
+
+**Single Day View:**
+- **Bedtime Card**: Exact time you went to sleep
+- **Wake Time Card**: Exact time you woke up
+- **Sleep Duration Card**: Total hours slept
+- **Sleep Heart Rate Card**: Heart rate during sleep with interactive chart
+- **Sleep HRV Card**: Heart rate variability during sleep with chart
+
+**Multi-Day View:**
+- **Average Sleep Duration**: Across all selected nights
+- **Average Bedtime**: With consistency tracking
+- **Average Wake Time**: Sleep schedule analysis
+- **Sleep Heart Rate Trends**: Average HR during sleep
+- **Sleep HRV Trends**: Average HRV during sleep
+
+### 📁 Exporting Your Data
+
+1. **Select your data** (single day or date range)
+2. **Click "Export to CSV"**
+3. **Your CSV will include:**
+   - Individual sleep metrics (bedtime, wake time, duration, HR, HRV)
+   - All other health metrics
+   - Your email for data tracking
+   - Clear data quality indicators
+
+---
+
+## 📂 Understanding Your Data
+
+### 🌙 Sleep Metrics
+- **Bedtime/Wake Time**: Exact times with consistency analysis
+- **Sleep Duration**: Total time in bed
+- **Sleep Heart Rate**: Lowest and average HR during sleep
+- **Sleep HRV**: Heart rate variability zones and averages
+
+### ❤️ Heart Rate Metrics
+- **Resting HR**: Daily resting heart rate
+- **Heart Rate Trends**: Throughout the day with interactive charts
+
+### 🩸 Glucose Monitoring
+- **Glucose Levels**: Blood glucose measurements
+- **Metabolic Score**: Overall metabolic health indicator
+- **Glucose Variability**: How much your glucose fluctuates
+
+### 🏃‍♂️ Activity Metrics
+- **Steps**: Daily step count
+- **Active Minutes**: Time spent in active movement
+- **VO2 Max**: Cardiovascular fitness indicator
+
+---
+
+## 🔧 Daily Usage
+
+### ⚡ Quick Start (After Initial Setup)
+1. **Open Terminal/Command Prompt**
+2. **Navigate to your project:**
+   ```bash
+   cd ~/Desktop/ultrahuman_dashboard-main  # Mac
+   cd C:\Users\YourName\Desktop\ultrahuman_dashboard-main  # Windows
+   ```
+3. **Activate virtual environment:**
+   ```bash
+   source venv/bin/activate  # Mac
+   venv\Scripts\activate     # Windows
+   ```
+4. **Run the dashboard:**
+   ```bash
+   python src/main.py
+   ```
+5. **Open browser:** http://localhost:8000
+
+### 🛑 Stopping the Dashboard
+- **Stop the server:** Press `Ctrl + C` in terminal
+- **Exit virtual environment:** Type `deactivate`
+
+---
+
+## 🗂️ Project Structure
 
 ```
-ultra_human_dashboard/
-├── README.md              # This file
-├── requirements.txt       # Python dependencies
-├── database.db           # SQLite database (created automatically)
-├── .gitignore            # Git ignore file
-├── src/                  # Source code
-│   ├── main.py          # Main application file
-│   ├── models/          # Database models
-│   │   └── user.py
-│   ├── routes/          # Web routes
-│   │   ├── metrics.py
-│   │   └── user.py
-│   └── static/          # Frontend files
-│       └── index.html
-├── Samples/             # Sample data files
-└── venv/               # Virtual environment (created during setup)
+ultrahuman_dashboard/
+├── 📄 README.md              # This guide
+├── 📋 requirements.txt       # Python packages needed
+├── 🗄️ database.db           # Your personal data (AUTO-CREATED, STAYS LOCAL)
+├── 🚫 .gitignore            # Protects your personal data
+├── 📁 src/                  # Application code
+│   ├── 🐍 main.py          # Main server file
+│   ├── 📁 models/          # Database structure
+│   ├── 📁 routes/          # API endpoints
+│   └── 📁 static/          # Web interface
+│       └── 🌐 index.html
+├── 📁 Samples/             # Example data files
+└── 📁 venv/               # Virtual environment (CREATED DURING SETUP)
 ```
 
-## Troubleshooting
+---
 
-### Common Issues
+## 🚨 Troubleshooting
 
-**"Python not found" error:**
-- Make sure Python is installed and added to your PATH
-- Try using `python3` instead of `python` on Mac/Linux
-- Restart your terminal after installing Python
+### ❌ Common Errors and Solutions
 
-**Permission errors on Windows:**
-- Run Command Prompt or PowerShell as Administrator
-- Or use PowerShell execution policy command mentioned above
+**"Python not found"**
+```bash
+# Solution: Make sure Python is installed and in PATH
+python3 --version  # Try python3 instead of python on Mac
+```
 
-**Virtual environment activation fails:**
-- Make sure you're in the correct project directory
-- Try using the full path to the activate script
+**"Permission denied" (Windows)**
+```powershell
+# Solution: Run PowerShell as Administrator, then:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
 
-**Dependencies won't install:**
-- Make sure your virtual environment is activated
-- Try updating pip: `pip install --upgrade pip`
+**"Can't access localhost:8000"**
+- ✅ Make sure the Python script is running without errors
+- ✅ Check if another app is using port 8000
+- ✅ Try restarting the dashboard
 
-**Can't access http://localhost:5000:**
-- Make sure the Python script is running without errors
-- Check if another application is using port 5000
-- Try a different port by modifying the main.py file
+**"No module named 'flask'"**
+```bash
+# Solution: Make sure virtual environment is activated
+# You should see (venv) in your terminal prompt
+pip install -r requirements.txt
+```
 
-### Getting Help
+**Database Issues**
+- The database file (`database.db`) is created automatically
+- It stays on your local machine and is never uploaded to GitHub
+- If corrupted, just delete it and restart the app
 
-If you encounter issues:
-1. Check that all installation steps were completed
-2. Make sure your virtual environment is activated
-3. Verify Python and pip are working correctly
-4. Check the terminal output for specific error messages
+### 🆘 Need Help?
 
-## Ultra Human API Setup
+1. **Check you completed ALL installation steps**
+2. **Verify your virtual environment is activated** (look for `(venv)` in terminal)
+3. **Read the error message carefully** - it usually tells you what's wrong
+4. **Try restarting your terminal** and starting over
+5. **Make sure you're in the correct folder** when running commands
 
-(This section will be expanded once the API integration is implemented)
+---
 
-1. Log into your Ultra Human account
-2. Generate an API key from your account settings
-3. Add your API credentials to the dashboard configuration
+## 🔒 Privacy & Security
 
-## Contributing
+- ✅ **All data stays on your machine** - nothing is sent to external servers
+- ✅ **Database file is excluded from GitHub** - your personal data never gets uploaded
+- ✅ **API keys are stored locally** - only you have access
+- ✅ **No cloud dependencies** - works completely offline after setup
 
-This is a personal project, but suggestions and improvements are welcome!
+---
 
-## License
+## 🎉 Features Overview
 
-This project is for personal use with Ultra Human ring data.
+### 📊 Dashboard Features
+- **Real-time health metrics visualization**
+- **Interactive charts with zoom and pan**
+- **Multi-day trend analysis**
+- **Clean, minimalist design**
+- **Mobile-responsive interface**
+
+### 📁 Export Features
+- **Comprehensive CSV exports**
+- **Individual sleep metrics as separate rows**
+- **Data quality indicators**
+- **Date range flexibility**
+- **User email tracking**
+
+### 🌙 Sleep Analysis
+- **Detailed sleep stage breakdown**
+- **Heart rate during sleep tracking**
+- **HRV monitoring during sleep**
+- **Sleep consistency analysis**
+- **Bedtime/wake time trends**
+
+---
+
+## 🤝 Support
+
+This project is designed for personal use with Ultra Human ring data. If you encounter issues:
+
+1. **Follow the troubleshooting guide above**
+2. **Check that your Ultra Human API credentials are correct**
+3. **Ensure your virtual environment is properly activated**
+4. **Verify all installation steps were completed**
+
+---
+
+## 📜 License
+
+This project is for personal use with Ultra Human ring data. Keep your API credentials secure and never share them publicly.
