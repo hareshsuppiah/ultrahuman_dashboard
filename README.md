@@ -153,6 +153,58 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
 
 ---
 
+## 🗄️ Database Setup (Automatic)
+
+**Great news: The database is created automatically!** 
+
+When you first run the dashboard (`python src/main.py`), the application will:
+
+1. **Create `database.db`** in your project folder automatically
+2. **Set up the user table** with the correct structure:
+   - `id`: Unique identifier for each user
+   - `email`: Your Ultra Human account email
+   - `api_key`: Your Ultra Human API key
+   - `access_code`: Your Ultra Human access code
+
+### 🔍 Database Details
+
+**File Location:** `ultrahuman_dashboard/database.db`
+
+**Structure Created Automatically:**
+```sql
+CREATE TABLE user (
+    id INTEGER PRIMARY KEY,
+    email VARCHAR(120) UNIQUE NOT NULL,
+    api_key VARCHAR(120) NOT NULL,
+    access_code VARCHAR(120) NOT NULL
+);
+```
+
+**What This Means:**
+- ✅ **No manual database setup required**
+- ✅ **Database file is created on first run**
+- ✅ **Your data stays completely local**
+- ✅ **Database file is automatically excluded from GitHub**
+
+### 🔄 Database Management
+
+**If you need to reset your database:**
+1. **Stop the dashboard** (Ctrl + C in terminal)
+2. **Delete the database file:**
+   ```bash
+   rm database.db  # Mac/Linux
+   del database.db # Windows
+   ```
+3. **Restart the dashboard** - a fresh database will be created automatically
+
+**If you want to backup your database:**
+```bash
+cp database.db database_backup.db  # Mac/Linux
+copy database.db database_backup.db # Windows
+```
+
+---
+
 ## 🎯 First Time Setup
 
 ### 🔑 Getting Your Ultra Human API Credentials
@@ -165,15 +217,24 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
 
 ### 📝 Adding Your Credentials
 
-1. **Open the dashboard** in your browser: http://localhost:8000
-2. **Click "Add New User"**
-3. **Enter your information:**
+1. **Start the dashboard** for the first time:
+   ```bash
+   python src/main.py
+   ```
+   🗄️ **The database.db file will be created automatically!**
+
+2. **Open the dashboard** in your browser: http://localhost:8000
+
+3. **Click "Add New User"**
+
+4. **Enter your information:**
    - Email: Your Ultra Human account email
    - API Key: The long key you received
    - Access Code: The short code you received
-4. **Click "Save User"**
 
-✅ You're now ready to view your data!
+5. **Click "Save User"**
+
+✅ **You're now ready to view your data!** Your credentials are securely stored in your local database.
 
 ---
 
@@ -271,17 +332,26 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
 ultrahuman_dashboard/
 ├── 📄 README.md              # This guide
 ├── 📋 requirements.txt       # Python packages needed
-├── 🗄️ database.db           # Your personal data (AUTO-CREATED, STAYS LOCAL)
-├── 🚫 .gitignore            # Protects your personal data
+├── 🗄️ database.db           # Your personal data (AUTO-CREATED when you first run the app)
+├── 🚫 .gitignore            # Protects your personal data from being uploaded
 ├── 📁 src/                  # Application code
-│   ├── 🐍 main.py          # Main server file
-│   ├── 📁 models/          # Database structure
+│   ├── 🐍 main.py          # Main server file (creates database automatically)
+│   ├── 📁 models/          # Database structure definitions
+│   │   └── 👤 user.py      # User table structure (id, email, api_key, access_code)
 │   ├── 📁 routes/          # API endpoints
+│   │   ├── 👤 user.py      # User management endpoints
+│   │   └── 📊 metrics.py   # Ultra Human API data endpoints
 │   └── 📁 static/          # Web interface
-│       └── 🌐 index.html
+│       └── 🌐 index.html   # Dashboard interface
 ├── 📁 Samples/             # Example data files
 └── 📁 venv/               # Virtual environment (CREATED DURING SETUP)
 ```
+
+**Key Files Explained:**
+- 🗄️ **database.db**: SQLite database created automatically on first run
+- 👤 **models/user.py**: Defines the database table structure
+- 🐍 **main.py**: Contains the database creation code (`db.create_all()`)
+- 🚫 **.gitignore**: Ensures database.db never gets uploaded to GitHub
 
 ---
 
@@ -314,9 +384,9 @@ pip install -r requirements.txt
 ```
 
 **Database Issues**
-- The database file (`database.db`) is created automatically
+- The database file (`database.db`) is created automatically when you first run the app
 - It stays on your local machine and is never uploaded to GitHub
-- If corrupted, just delete it and restart the app
+- If corrupted, just delete it and restart the app - it will be recreated automatically
 
 ### 🆘 Need Help?
 
