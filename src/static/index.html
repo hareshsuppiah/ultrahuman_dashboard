@@ -29,12 +29,13 @@
         .error { color: #dc3545; margin-top: 10px; font-weight: bold; } 
         .success { color: #28a745; margin-top: 10px; font-weight: bold; } 
         .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; } 
-        .metric-card { border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; background-color: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } 
+        .metric-card { border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; background-color: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.05); max-height: 500px; overflow-y: auto; } 
         .metric-card h3 { margin-top: 0; font-size: 1.2em; color: #0056b3; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 15px; } 
         .metric-value { font-size: 1.8em; font-weight: bold; margin-bottom: 5px; color: #333; } 
         .metric-unit { font-size: 0.9em; color: #555; margin-left: 5px; } 
         .metric-details { font-size: 0.9em; color: #666; } 
-        canvas { max-width: 100%; height: auto; margin-top: 15px; } 
+        canvas { max-width: 100%; height: 250px !important; margin-top: 15px; display: block; }
+        .chart-container { height: 250px; position: relative; margin-top: 15px; } 
         #loading-indicator { text-align: center; padding: 20px; font-size: 1.2em; color: #007bff; display: none; } 
     </style>
 </head>
@@ -99,10 +100,26 @@
                 </select>
             </div>
             <div class="form-group">
+                <label>Date Selection Mode:</label>
+                <div>
+                    <input type="radio" id="single-date-mode" name="date-mode" value="single" checked>
+                    <label for="single-date-mode">Single Day</label>
+                    <input type="radio" id="date-range-mode" name="date-mode" value="range" style="margin-left: 20px;">
+                    <label for="date-range-mode">Date Range</label>
+                </div>
+            </div>
+            <div class="form-group" id="single-date-group">
                 <label for="date-select">Select Date:</label>
                 <input type="date" id="date-select">
             </div>
+            <div class="form-group" id="date-range-group" style="display: none;">
+                <label for="start-date-select">Start Date:</label>
+                <input type="date" id="start-date-select">
+                <label for="end-date-select" style="margin-top: 10px;">End Date:</label>
+                <input type="date" id="end-date-select">
+            </div>
             <button id="fetch-data-button">Fetch Data</button>
+            <button id="export-csv-button" style="margin-left: 10px; display: none;">Export to CSV</button>
             <div id="loading-indicator">Loading data...</div>
             <div id="dashboard-error" class="error"></div>
 
@@ -136,12 +153,20 @@
         const cancelEditButton = document.getElementById("cancel-edit-button");
 
         const dateSelect = document.getElementById("date-select");
+        const startDateSelect = document.getElementById("start-date-select");
+        const endDateSelect = document.getElementById("end-date-select");
+        const singleDateMode = document.getElementById("single-date-mode");
+        const dateRangeMode = document.getElementById("date-range-mode");
+        const singleDateGroup = document.getElementById("single-date-group");
+        const dateRangeGroup = document.getElementById("date-range-group");
         const fetchDataButton = document.getElementById("fetch-data-button");
+        const exportCsvButton = document.getElementById("export-csv-button");
         const metricsDisplay = document.getElementById("metrics-display");
         const dashboardError = document.getElementById("dashboard-error");
         const loadingIndicator = document.getElementById("loading-indicator");
 
         let currentChartInstances = {}; // To keep track of chart instances
+        let currentMetricsData = null; // Store current data for CSV export
 
         // --- Utility Functions ---
         function displayError(element, message) {
@@ -302,44 +327,123 @@
         }
 
         // --- Dashboard Functions ---
+        function toggleDateMode() {
+            if (singleDateMode.checked) {
+                singleDateGroup.style.display = "block";
+                dateRangeGroup.style.display = "none";
+            } else {
+                singleDateGroup.style.display = "none";
+                dateRangeGroup.style.display = "block";
+            }
+        }
+
         function setDateToToday() {
             const today = new Date().toISOString().split("T")[0];
             dateSelect.value = today;
+            startDateSelect.value = today;
+            endDateSelect.value = today;
+        }
+
+        function validateDateRange() {
+            if (dateRangeMode.checked) {
+                const startDate = new Date(startDateSelect.value);
+                const endDate = new Date(endDateSelect.value);
+                if (startDate > endDate) {
+                    displayError(dashboardError, "Start date must be before or equal to end date.");
+                    return false;
+                }
+                const daysDiff = (endDate - startDate) / (1000 * 60 * 60 * 24);
+                if (daysDiff > 30) {
+                    displayError(dashboardError, "Date range cannot exceed 30 days.");
+                    return false;
+                }
+            }
+            return true;
         }
 
         async function fetchMetrics() {
             const userId = userSelect.value;
-            const date = dateSelect.value;
-
+            
             clearError(dashboardError);
             metricsDisplay.innerHTML = ""; // Clear previous metrics
             destroyCharts(); // Destroy old charts before creating new ones
+            exportCsvButton.style.display = "none";
+            currentMetricsData = null;
 
             if (!userId) {
                 displayError(dashboardError, "Please select a user.");
                 return;
             }
-            if (!date) {
-                displayError(dashboardError, "Please select a date.");
-                return;
+
+            // Validate date inputs based on mode
+            if (singleDateMode.checked) {
+                if (!dateSelect.value) {
+                    displayError(dashboardError, "Please select a date.");
+                    return;
+                }
+            } else {
+                if (!startDateSelect.value || !endDateSelect.value) {
+                    displayError(dashboardError, "Please select both start and end dates.");
+                    return;
+                }
+                if (!validateDateRange()) {
+                    return;
+                }
             }
 
             loadingIndicator.style.display = "block";
             fetchDataButton.disabled = true;
 
             try {
-                const response = await fetch(`${metricsApiUrlBase}/${userId}?date=${date}`);
-                const result = await response.json();
+                let allMetricsData = [];
+                let dateRange = [];
 
-                if (!response.ok) {
-                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
+                if (singleDateMode.checked) {
+                    // Single date mode
+                    dateRange = [dateSelect.value];
+                } else {
+                    // Date range mode - generate array of dates
+                    const startDate = new Date(startDateSelect.value);
+                    const endDate = new Date(endDateSelect.value);
+                    
+                    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                        dateRange.push(d.toISOString().split('T')[0]);
+                    }
                 }
 
-                if (result.data && result.data.metric_data) {
-                    displayMetrics(result.data.metric_data);
+                // Fetch data for each date
+                for (let i = 0; i < dateRange.length; i++) {
+                    const date = dateRange[i];
+                    loadingIndicator.textContent = `Loading data... (${i + 1}/${dateRange.length})`;
+                    
+                    const response = await fetch(`${metricsApiUrlBase}/${userId}?date=${date}`);
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        console.warn(`Failed to fetch data for ${date}: ${result.error}`);
+                        continue;
+                    }
+
+                    if (result.data && result.data.metric_data) {
+                        // Add date info to each metric
+                        const dateMetrics = result.data.metric_data.map(metric => ({
+                            ...metric,
+                            date: date
+                        }));
+                        allMetricsData.push(...dateMetrics);
+                    }
+                }
+
+                if (allMetricsData.length > 0) {
+                    currentMetricsData = allMetricsData;
+                    if (singleDateMode.checked) {
+                        displayMetrics(allMetricsData);
+                    } else {
+                        displayAggregatedMetrics(allMetricsData, dateRange);
+                    }
+                    exportCsvButton.style.display = "inline-block";
                 } else {
-                    // Handle cases where API returns success but no data (or unexpected structure)
-                    metricsDisplay.innerHTML = `<p>No metric data available for the selected user and date.</p>`;
+                    metricsDisplay.innerHTML = `<p>No metric data available for the selected user and date(s).</p>`;
                 }
 
             } catch (error) {
@@ -347,6 +451,7 @@
                 displayError(dashboardError, `Error fetching data: ${error.message}`);
             } finally {
                 loadingIndicator.style.display = "none";
+                loadingIndicator.textContent = "Loading data...";
                 fetchDataButton.disabled = false;
             }
         }
@@ -373,7 +478,7 @@
                             }
                             if (details.sleep_stages) {
                                 content += `<h4>Sleep Stages:</h4>`;
-                                content += `<canvas id="${canvasId}"></canvas>`;
+                                content += `<div class="chart-container"><canvas id="${canvasId}"></canvas></div>`;
                                 // Prepare data for Doughnut chart
                                 const stageLabels = details.sleep_stages.map(s => s.title);
                                 const stageData = details.sleep_stages.map(s => s.percentage);
@@ -389,7 +494,7 @@
                         content += `<div class="metric-value">${metric.object.avg ?? metric.object.last_reading ?? "N/A"} <span class="metric-unit">${metric.object.unit || (metric.type === "hrv" ? "ms" : ".")}</span></div>`;
                         if (metric.object.subtitle) content += `<p class="metric-details">(${metric.object.subtitle})</p>`;
                         if (metric.object.values && metric.object.values.length > 0) {
-                            content += `<canvas id="${canvasId}"></canvas>`;
+                            content += `<div class="chart-container"><canvas id="${canvasId}"></canvas></div>`;
                             const labels = metric.object.values.map(v => new Date(v.timestamp * 1000));
                             const data = metric.object.values.map(v => v.value);
                             setTimeout(() => createLineChart(canvasId, labels, data, metric.object.title || metric.type), 0);
@@ -428,6 +533,138 @@
             });
         }
 
+        function displayAggregatedMetrics(allMetricsData, dateRange) {
+            metricsDisplay.innerHTML = ""; // Clear previous content
+            
+            // Group metrics by type
+            const metricsByType = {};
+            allMetricsData.forEach(metric => {
+                if (!metricsByType[metric.type]) {
+                    metricsByType[metric.type] = [];
+                }
+                metricsByType[metric.type].push(metric);
+            });
+
+            // Display aggregated data for each metric type
+            Object.keys(metricsByType).forEach(metricType => {
+                const metrics = metricsByType[metricType];
+                const card = document.createElement("div");
+                card.className = "metric-card";
+                
+                let content = `<h3>${metricType.replace("_", " ").toUpperCase()} (${dateRange.length} days)</h3>`;
+                
+                // Calculate aggregations based on metric type
+                switch (metricType) {
+                    case "sleep":
+                        const avgScore = metrics.reduce((sum, m) => sum + (m.object.score || 0), 0) / metrics.length;
+                        content += `<div class="metric-value">${avgScore.toFixed(1)} <span class="metric-unit">Avg Score</span></div>`;
+                        content += `<p class="metric-details">Range: ${Math.min(...metrics.map(m => m.object.score || 0))} - ${Math.max(...metrics.map(m => m.object.score || 0))}</p>`;
+                        break;
+                    case "hr":
+                    case "temp":
+                    case "hrv":
+                    case "night_rhr":
+                        const avgValue = metrics.reduce((sum, m) => sum + (m.object.avg || m.object.last_reading || 0), 0) / metrics.length;
+                        const unit = metrics[0]?.object.unit || (metricType === "hrv" ? "ms" : "");
+                        content += `<div class="metric-value">${avgValue.toFixed(1)} <span class="metric-unit">${unit} (Avg)</span></div>`;
+                        break;
+                    case "steps":
+                        const totalSteps = metrics.reduce((sum, m) => sum + (m.object.avg || 0), 0);
+                        const avgSteps = totalSteps / metrics.length;
+                        content += `<div class="metric-value">${totalSteps.toFixed(0)} <span class="metric-unit">Total Steps</span></div>`;
+                        content += `<p class="metric-details">Daily Average: ${avgSteps.toFixed(0)} steps</p>`;
+                        break;
+                    default:
+                        content += `<p class="metric-details">${metrics.length} data points collected</p>`;
+                }
+                
+                // Add date range info
+                content += `<p class="metric-details">Period: ${dateRange[0]} to ${dateRange[dateRange.length - 1]}</p>`;
+                
+                card.innerHTML = content;
+                metricsDisplay.appendChild(card);
+            });
+        }
+
+        function exportToCSV() {
+            if (!currentMetricsData || currentMetricsData.length === 0) {
+                displayError(dashboardError, "No data available to export.");
+                return;
+            }
+
+            // Prepare CSV data
+            const csvRows = [];
+            const headers = ["Date", "Metric Type", "Value", "Unit", "Details"];
+            csvRows.push(headers.join(","));
+
+            currentMetricsData.forEach(metric => {
+                const date = metric.date || "N/A";
+                const type = metric.type || "N/A";
+                let value = "N/A";
+                let unit = "";
+                let details = "";
+
+                // Extract relevant data based on metric type
+                switch (metric.type) {
+                    case "sleep":
+                        value = metric.object.score || "N/A";
+                        unit = "Score";
+                        if (metric.object.details && metric.object.details.quick_metrics) {
+                            details = metric.object.details.quick_metrics.map(qm => `${qm.title}: ${qm.display_text}`).join("; ");
+                        }
+                        break;
+                    case "hr":
+                    case "temp":
+                    case "hrv":
+                    case "night_rhr":
+                        value = metric.object.avg || metric.object.last_reading || "N/A";
+                        unit = metric.object.unit || (metric.type === "hrv" ? "ms" : "");
+                        details = metric.object.subtitle || "";
+                        break;
+                    case "steps":
+                        value = metric.object.avg || "N/A";
+                        unit = "Steps";
+                        break;
+                    default:
+                        value = metric.object.value || metric.object.score || metric.object.avg || "N/A";
+                        unit = metric.object.unit || "";
+                        details = metric.object.title || "";
+                }
+
+                // Escape commas and quotes in CSV data
+                const escapeCsvField = (field) => {
+                    if (typeof field === "string" && (field.includes(",") || field.includes('"'))) {
+                        return `"${field.replace(/"/g, '""')}"`;
+                    }
+                    return field;
+                };
+
+                csvRows.push([
+                    escapeCsvField(date),
+                    escapeCsvField(type),
+                    escapeCsvField(value),
+                    escapeCsvField(unit),
+                    escapeCsvField(details)
+                ].join(","));
+            });
+
+            // Create and download CSV file
+            const csvContent = csvRows.join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                const dateStr = singleDateMode.checked ? dateSelect.value : `${startDateSelect.value}_to_${endDateSelect.value}`;
+                link.setAttribute("download", `ultrahuman_data_${dateStr}.csv`);
+                link.style.visibility = "hidden";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
         // --- Charting Functions ---
         function destroyCharts() {
             Object.values(currentChartInstances).forEach(chart => chart.destroy());
@@ -452,6 +689,12 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
                     scales: {
                         x: {
                             type: "time",
@@ -493,10 +736,14 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    let label = context.label || ".";
+                                    let label = context.label || "";
                                     if (label) {
                                         label += ": ";
                                     }
@@ -517,11 +764,15 @@
         cancelEditButton.addEventListener("click", hideUserForm);
         userForm.addEventListener("submit", saveUser);
         fetchDataButton.addEventListener("click", fetchMetrics);
+        exportCsvButton.addEventListener("click", exportToCSV);
+        singleDateMode.addEventListener("change", toggleDateMode);
+        dateRangeMode.addEventListener("change", toggleDateMode);
 
         // --- Initial Load ---
         document.addEventListener("DOMContentLoaded", () => {
             fetchUsers();
             setDateToToday();
+            toggleDateMode(); // Initialize date mode display
         });
 
     </script>
