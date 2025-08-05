@@ -671,6 +671,11 @@
                             date: date
                         }));
                         allMetricsData.push(...dateMetrics);
+                        
+                        // Debug: Log a sample metric to understand structure
+                        if (dateMetrics.length > 0) {
+                            console.log(`Sample metric for ${date}:`, dateMetrics[0]);
+                        }
                     }
                 }
 
@@ -701,43 +706,147 @@
             metricData.forEach(metric => {
                 const card = document.createElement("div");
                 card.className = "metric-card";
+                
+                // Check if metric has the expected structure
+                if (!metric.object) {
+                    console.error("Metric missing 'object' property:", metric);
+                    return;
+                }
+                
                 let content = `<h3>${metric.object.title || metric.type.replace("_", " ").toUpperCase()}</h3>`;
                 let canvasId = `chart-${metric.type}-${Date.now()}`;
 
                 // --- Specific Metric Handling ---
                 switch (metric.type) {
                     case "sleep":
-                        content += `<div class="metric-value">${metric.object.score || "N/A"} <span class="metric-unit">Score</span></div>`;
-                        if (metric.object.details) {
-                            const details = metric.object.details;
-                            content += `<p class="metric-details">Bedtime: ${new Date(details.bedtime_start * 1000).toLocaleTimeString()} - ${new Date(details.bedtime_end * 1000).toLocaleTimeString()}</p>`;
-                            if (details.quick_metrics) {
-                                details.quick_metrics.forEach(qm => {
-                                    content += `<p class="metric-details">${qm.title}: ${qm.display_text} ${qm.unit || "."}</p>`;
-                                });
+                    case "Sleep":
+                        // Check if we have any sleep data at all
+                        const hasAnyData = Object.keys(metric.object).length > 0;
+                        const hasFullSleepData = metric.object.bedtime_start && metric.object.bedtime_end;
+                        
+                        if (hasFullSleepData) {
+                            const bedtimeStart = new Date(metric.object.bedtime_start * 1000);
+                            const bedtimeEnd = new Date(metric.object.bedtime_end * 1000);
+                            const duration = (metric.object.bedtime_end - metric.object.bedtime_start) / 3600;
+                            
+                            // Instead of adding to current card, create multiple cards
+                            card.innerHTML = content; // Finish the title card
+                            metricsDisplay.appendChild(card); // Add the title card
+                            
+                            // 1. Bedtime Card
+                            const bedtimeCard = document.createElement("div");
+                            bedtimeCard.className = "metric-card";
+                            bedtimeCard.innerHTML = `
+                                <h3>BEDTIME</h3>
+                                <div class="metric-value">${bedtimeStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} <span class="metric-unit">Time</span></div>
+                                <p class="metric-details">Sleep start time</p>
+                            `;
+                            metricsDisplay.appendChild(bedtimeCard);
+                            
+                            // 2. Wake Time Card
+                            const wakeCard = document.createElement("div");
+                            wakeCard.className = "metric-card";
+                            wakeCard.innerHTML = `
+                                <h3>WAKE TIME</h3>
+                                <div class="metric-value">${bedtimeEnd.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} <span class="metric-unit">Time</span></div>
+                                <p class="metric-details">Sleep end time</p>
+                            `;
+                            metricsDisplay.appendChild(wakeCard);
+                            
+                            // 3. Sleep Duration Card
+                            const durationCard = document.createElement("div");
+                            durationCard.className = "metric-card";
+                            durationCard.innerHTML = `
+                                <h3>SLEEP DURATION</h3>
+                                <div class="metric-value">${duration.toFixed(1)} <span class="metric-unit">hours</span></div>
+                                <p class="metric-details">Total time in bed</p>
+                            `;
+                            metricsDisplay.appendChild(durationCard);
+                            
+                            // 4. Sleep Heart Rate Card
+                            if (metric.object.hr_graph && metric.object.hr_graph.gist_object) {
+                                const hrGist = metric.object.hr_graph.gist_object;
+                                const hrCard = document.createElement("div");
+                                hrCard.className = "metric-card";
+                                const hrCanvasId = `hr-sleep-${Date.now()}`;
+                                hrCard.innerHTML = `
+                                    <h3>SLEEP HEART RATE</h3>
+                                    <div class="metric-value">${hrGist.detail_text || hrGist.min || "N/A"} <span class="metric-unit">BPM</span></div>
+                                    <p class="metric-details">${hrGist.title || "Lowest HR during sleep"}</p>
+                                    <p class="metric-details">${hrGist.subtitle || ""}</p>
+                                    <div class="chart-container"><canvas id="${hrCanvasId}"></canvas></div>
+                                `;
+                                metricsDisplay.appendChild(hrCard);
+                                
+                                // Add HR chart
+                                if (metric.object.hr_graph.data && metric.object.hr_graph.data.length > 0) {
+                                    const hrData = metric.object.hr_graph.data;
+                                    const hrLabels = hrData.map(d => new Date(d.timestamp * 1000));
+                                    const hrValues = hrData.map(d => d.value);
+                                    setTimeout(() => createLineChart(hrCanvasId, hrLabels, hrValues, "Heart Rate (BPM)"), 0);
+                                }
                             }
-                            if (details.sleep_stages) {
-                                content += `<h4>Sleep Stages:</h4>`;
-                                content += `<div class="chart-container"><canvas id="${canvasId}"></canvas></div>`;
-                                // Prepare data for Doughnut chart
-                                const stageLabels = details.sleep_stages.map(s => s.title);
-                                const stageData = details.sleep_stages.map(s => s.percentage);
-                                setTimeout(() => createDoughnutChart(canvasId, stageLabels, stageData), 0); // Render chart after element is in DOM
+                            
+                            // 5. Sleep HRV Card
+                            if (metric.object.hrv_graph && metric.object.hrv_graph.gist_object) {
+                                const hrvGist = metric.object.hrv_graph.gist_object;
+                                const hrvCard = document.createElement("div");
+                                hrvCard.className = "metric-card";
+                                const hrvCanvasId = `hrv-sleep-${Date.now()}`;
+                                hrvCard.innerHTML = `
+                                    <h3>SLEEP HRV</h3>
+                                    <div class="metric-value">${hrvGist.detail_text || "N/A"} <span class="metric-unit">ms</span></div>
+                                    <p class="metric-details">${hrvGist.title || "HRV zone during sleep"}</p>
+                                    <p class="metric-details">${hrvGist.subtitle || ""}</p>
+                                    <div class="chart-container"><canvas id="${hrvCanvasId}"></canvas></div>
+                                `;
+                                metricsDisplay.appendChild(hrvCard);
+                                
+                                // Add HRV chart
+                                if (metric.object.hrv_graph.data && metric.object.hrv_graph.data.length > 0) {
+                                    const hrvData = metric.object.hrv_graph.data;
+                                    const hrvLabels = hrvData.map(d => new Date(d.timestamp * 1000));
+                                    const hrvValues = hrvData.map(d => d.value);
+                                    setTimeout(() => createLineChart(hrvCanvasId, hrvLabels, hrvValues, "HRV (ms)"), 0);
+                                }
                             }
-                            // Could add more charts for hr_graph, hrv_graph, movement_graph, sleep_graph if needed
+                            
+                            // Skip the normal card creation for sleep since we created multiple cards
+                            return;
+                        } else if (!hasAnyData) {
+                            // Handle empty Sleep objects (no data available)
+                            content += `<div class="metric-value">No Data <span class="metric-unit">Available</span></div>`;
+                            content += `<p class="metric-details">No sleep data recorded for this date</p>`;
+                        } else {
+                            // Fallback for other sleep data formats (score-based, etc.)
+                            content += `<div class="metric-value">${metric.object.score || "N/A"} <span class="metric-unit">Score</span></div>`;
+                            if (metric.object.subtitle) content += `<p class="metric-details">${metric.object.subtitle}</p>`;
                         }
                         break;
                     case "hr":
                     case "temp":
                     case "hrv": // HRV average is often a key metric
                     case "night_rhr":
-                        content += `<div class="metric-value">${metric.object.avg ?? metric.object.last_reading ?? "N/A"} <span class="metric-unit">${metric.object.unit || (metric.type === "hrv" ? "ms" : ".")}</span></div>`;
-                        if (metric.object.subtitle) content += `<p class="metric-details">(${metric.object.subtitle})</p>`;
+                        // For HR/HRV/Temp data with values array containing timestamp/value objects
                         if (metric.object.values && metric.object.values.length > 0) {
+                            const displayValue = metric.object.avg || metric.object.last_reading || "N/A";
+                            content += `<div class="metric-value">${displayValue} <span class="metric-unit">${metric.object.unit || (metric.type === "hrv" ? "ms" : "BPM")}</span></div>`;
+                            
+                            // Add subtitle if present
+                            if (metric.object.subtitle) content += `<p class="metric-details">${metric.object.subtitle}</p>`;
+                            if (metric.object.trend_direction && metric.object.trend_title) {
+                                content += `<p class="metric-details">Trend: ${metric.object.trend_title}</p>`;
+                            }
+                            
                             content += `<div class="chart-container"><canvas id="${canvasId}"></canvas></div>`;
+                            // Values array contains objects with timestamp and value
                             const labels = metric.object.values.map(v => new Date(v.timestamp * 1000));
-                            const data = metric.object.values.map(v => v.value);
-                            setTimeout(() => createLineChart(canvasId, labels, data, metric.object.title || metric.type), 0);
+                            const dataPoints = metric.object.values.map(v => v.value);
+                            setTimeout(() => createLineChart(canvasId, labels, dataPoints, metric.object.title || metric.type), 0);
+                        } else {
+                            // Fallback for other formats
+                            content += `<div class="metric-value">${metric.object.avg ?? metric.object.last_reading ?? metric.object.value ?? "N/A"} <span class="metric-unit">${metric.object.unit || (metric.type === "hrv" ? "ms" : ".")}</span></div>`;
+                            if (metric.object.subtitle) content += `<p class="metric-details">(${metric.object.subtitle})</p>`;
                         }
                         break;
                     case "steps":
@@ -750,6 +859,33 @@
                     case "movement": // Movement Index
                         content += `<div class="metric-value">${metric.object.score ?? "N/A"} <span class="metric-unit">Index</span></div>`;
                         if (metric.object.state_title) content += `<p class="metric-details">State: ${metric.object.state_title}</p>`;
+                        break;
+                    case "recovery_index":
+                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">${metric.object.title || "Recovery Index"}</span></div>`;
+                        break;
+                    case "movement_index":
+                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">${metric.object.title || "Movement Index"}</span></div>`;
+                        break;
+                    case "avg_sleep_hrv":
+                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">ms</span></div>`;
+                        break;
+                    case "active_minutes":
+                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">${metric.object.title || "Active Minutes"}</span></div>`;
+                        break;
+                    case "sleep_rhr":
+                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">BPM</span></div>`;
+                        break;
+                    case "resting_hr":
+                        // Handle resting HR with values array
+                        if (metric.object.values && metric.object.values.length > 0) {
+                            content += `<div class="metric-value">${metric.object.last_reading || "N/A"} <span class="metric-unit">${metric.object.unit || "BPM"}</span></div>`;
+                            content += `<div class="chart-container"><canvas id="${canvasId}"></canvas></div>`;
+                            const dataPoints = metric.object.values;
+                            const labels = dataPoints.map((_, index) => index);
+                            setTimeout(() => createLineChart(canvasId, labels, dataPoints, metric.object.title || "Resting HR"), 0);
+                        } else {
+                            content += `<div class="metric-value">N/A <span class="metric-unit">BPM</span></div>`;
+                        }
                         break;
                     // Glucose related metrics (assuming structure from initial doc)
                     case "glucose": // Assuming this might be an average or latest reading
@@ -796,9 +932,116 @@
                 // Calculate aggregations based on metric type
                 switch (metricType) {
                     case "sleep":
-                        const avgScore = metrics.reduce((sum, m) => sum + (m.object.score || 0), 0) / metrics.length;
-                        content += `<div class="metric-value">${avgScore.toFixed(1)} <span class="metric-unit">Avg Score</span></div>`;
-                        content += `<p class="metric-details">Range: ${Math.min(...metrics.map(m => m.object.score || 0))} - ${Math.max(...metrics.map(m => m.object.score || 0))}</p>`;
+                    case "Sleep":
+                        // Create separate sleep analytics cards for multi-day view
+                        let totalSleepHours = 0;
+                        let totalHR = 0;
+                        let totalHRV = 0;
+                        let validSleepCount = 0;
+                        let validHRCount = 0;
+                        let validHRVCount = 0;
+                        let bedtimes = [];
+                        let waketimes = [];
+                        
+                        metrics.forEach(m => {
+                            const hasValidSleepData = m.object.bedtime_start && m.object.bedtime_end;
+                            if (hasValidSleepData) {
+                                const duration = (m.object.bedtime_end - m.object.bedtime_start) / 3600;
+                                totalSleepHours += duration;
+                                validSleepCount++;
+                                
+                                // Collect bedtimes and wake times for consistency analysis
+                                const bedtime = new Date(m.object.bedtime_start * 1000);
+                                const waketime = new Date(m.object.bedtime_end * 1000);
+                                bedtimes.push(bedtime.getHours() + bedtime.getMinutes() / 60);
+                                waketimes.push(waketime.getHours() + waketime.getMinutes() / 60);
+                            }
+                            if (m.object.hr_graph && m.object.hr_graph.gist_object) {
+                                totalHR += m.object.hr_graph.gist_object.avg || 0;
+                                validHRCount++;
+                            }
+                            if (m.object.hrv_graph && m.object.hrv_graph.gist_object) {
+                                totalHRV += m.object.hrv_graph.gist_object.avg || 0;
+                                validHRVCount++;
+                            }
+                        });
+                        
+                        // Create main sleep summary card
+                        content += `<div class="metric-value">${validSleepCount}/${metrics.length} <span class="metric-unit">nights</span></div>`;
+                        content += `<p class="metric-details">Nights with sleep data</p>`;
+                        card.innerHTML = content;
+                        metricsDisplay.appendChild(card);
+                        
+                        // Create separate cards for each sleep metric
+                        if (validSleepCount > 0) {
+                            // Average Sleep Duration
+                            const avgSleepHours = totalSleepHours / validSleepCount;
+                            const durationCard = document.createElement("div");
+                            durationCard.className = "metric-card";
+                            durationCard.innerHTML = `
+                                <h3>AVG SLEEP DURATION (${dateRange.length} days)</h3>
+                                <div class="metric-value">${avgSleepHours.toFixed(1)} <span class="metric-unit">hours</span></div>
+                                <p class="metric-details">Average nightly sleep duration</p>
+                            `;
+                            metricsDisplay.appendChild(durationCard);
+                            
+                            // Average Bedtime
+                            if (bedtimes.length > 0) {
+                                const avgBedtime = bedtimes.reduce((sum, time) => sum + time, 0) / bedtimes.length;
+                                const bedtimeHour = Math.floor(avgBedtime);
+                                const bedtimeMin = Math.round((avgBedtime - bedtimeHour) * 60);
+                                const bedtimeCard = document.createElement("div");
+                                bedtimeCard.className = "metric-card";
+                                bedtimeCard.innerHTML = `
+                                    <h3>AVG BEDTIME (${dateRange.length} days)</h3>
+                                    <div class="metric-value">${bedtimeHour}:${bedtimeMin.toString().padStart(2, '0')} <span class="metric-unit">PM</span></div>
+                                    <p class="metric-details">Average sleep start time</p>
+                                `;
+                                metricsDisplay.appendChild(bedtimeCard);
+                            }
+                            
+                            // Average Wake Time
+                            if (waketimes.length > 0) {
+                                const avgWaketime = waketimes.reduce((sum, time) => sum + time, 0) / waketimes.length;
+                                const waketimeHour = Math.floor(avgWaketime);
+                                const waketimeMin = Math.round((avgWaketime - waketimeHour) * 60);
+                                const waketimeCard = document.createElement("div");
+                                waketimeCard.className = "metric-card";
+                                waketimeCard.innerHTML = `
+                                    <h3>AVG WAKE TIME (${dateRange.length} days)</h3>
+                                    <div class="metric-value">${waketimeHour}:${waketimeMin.toString().padStart(2, '0')} <span class="metric-unit">AM</span></div>
+                                    <p class="metric-details">Average wake up time</p>
+                                `;
+                                metricsDisplay.appendChild(waketimeCard);
+                            }
+                        }
+                        
+                        if (validHRCount > 0) {
+                            const avgHR = totalHR / validHRCount;
+                            const hrCard = document.createElement("div");
+                            hrCard.className = "metric-card";
+                            hrCard.innerHTML = `
+                                <h3>AVG SLEEP HEART RATE (${dateRange.length} days)</h3>
+                                <div class="metric-value">${avgHR.toFixed(0)} <span class="metric-unit">BPM</span></div>
+                                <p class="metric-details">Average heart rate during sleep</p>
+                            `;
+                            metricsDisplay.appendChild(hrCard);
+                        }
+                        
+                        if (validHRVCount > 0) {
+                            const avgHRV = totalHRV / validHRVCount;
+                            const hrvCard = document.createElement("div");
+                            hrvCard.className = "metric-card";
+                            hrvCard.innerHTML = `
+                                <h3>AVG SLEEP HRV (${dateRange.length} days)</h3>
+                                <div class="metric-value">${avgHRV.toFixed(0)} <span class="metric-unit">ms</span></div>
+                                <p class="metric-details">Average HRV during sleep</p>
+                            `;
+                            metricsDisplay.appendChild(hrvCard);
+                        }
+                        
+                        // Skip normal card creation since we created multiple cards
+                        return;
                         break;
                     case "hr":
                     case "temp":
@@ -807,15 +1050,68 @@
                         const avgValue = metrics.reduce((sum, m) => sum + (m.object.avg || m.object.last_reading || 0), 0) / metrics.length;
                         const unit = metrics[0]?.object.unit || (metricType === "hrv" ? "ms" : "");
                         content += `<div class="metric-value">${avgValue.toFixed(1)} <span class="metric-unit">${unit} (Avg)</span></div>`;
+                        
+                        // Show range if available
+                        const hrValues = metrics.map(m => m.object.avg || m.object.last_reading || 0).filter(v => v > 0);
+                        if (hrValues.length > 0) {
+                            const minVal = Math.min(...hrValues);
+                            const maxVal = Math.max(...hrValues);
+                            content += `<p class="metric-details">Range: ${minVal.toFixed(1)} - ${maxVal.toFixed(1)} ${unit}</p>`;
+                        }
                         break;
                     case "steps":
-                        const totalSteps = metrics.reduce((sum, m) => sum + (m.object.avg || 0), 0);
+                        const totalSteps = metrics.reduce((sum, m) => sum + (m.object.avg || m.object.value || 0), 0);
                         const avgSteps = totalSteps / metrics.length;
                         content += `<div class="metric-value">${totalSteps.toFixed(0)} <span class="metric-unit">Total Steps</span></div>`;
                         content += `<p class="metric-details">Daily Average: ${avgSteps.toFixed(0)} steps</p>`;
                         break;
+                    case "avg_sleep_hrv":
+                        const avgSleepHrv = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0) / metrics.length;
+                        content += `<div class="metric-value">${avgSleepHrv.toFixed(0)} <span class="metric-unit">ms (Avg)</span></div>`;
+                        break;
+                    case "recovery_index":
+                    case "movement_index":
+                        const avgIndex = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0) / metrics.length;
+                        content += `<div class="metric-value">${avgIndex.toFixed(0)} <span class="metric-unit">Index (Avg)</span></div>`;
+                        break;
+                    case "active_minutes":
+                        const totalMinutes = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0);
+                        const avgMinutes = totalMinutes / metrics.length;
+                        content += `<div class="metric-value">${totalMinutes} <span class="metric-unit">Total Minutes</span></div>`;
+                        content += `<p class="metric-details">Daily Average: ${avgMinutes.toFixed(0)} minutes</p>`;
+                        break;
+                    case "sleep_rhr":
+                        const avgSleepRhr = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0) / metrics.length;
+                        content += `<div class="metric-value">${avgSleepRhr.toFixed(0)} <span class="metric-unit">BPM (Avg)</span></div>`;
+                        break;
+                    case "vo2_max":
+                        const avgVo2 = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0) / metrics.length;
+                        content += `<div class="metric-value">${avgVo2.toFixed(0)} <span class="metric-unit">ml/kg/min (Avg)</span></div>`;
+                        break;
+                    case "glucose":
+                    case "metabolic_score":
+                    case "glucose_variability":
+                    case "average_glucose":
+                    case "hba1c":
+                    case "time_in_target":
+                        const glucoseValues = metrics.map(m => m.object.value || 0).filter(v => v > 0);
+                        if (glucoseValues.length > 0) {
+                            const avgVal = glucoseValues.reduce((sum, v) => sum + v, 0) / glucoseValues.length;
+                            const unitStr = metricType.includes("score") ? "Score" : metricType.includes("variability") || metricType.includes("target") ? "%" : "mg/dL";
+                            content += `<div class="metric-value">${avgVal.toFixed(1)} <span class="metric-unit">${unitStr} (Avg)</span></div>`;
+                        } else {
+                            content += `<p class="metric-details">No data available</p>`;
+                        }
+                        break;
                     default:
-                        content += `<p class="metric-details">${metrics.length} data points collected</p>`;
+                        // For unrecognized types, try to show value if available
+                        const genericValues = metrics.map(m => m.object.value || 0).filter(v => v > 0);
+                        if (genericValues.length > 0) {
+                            const avg = genericValues.reduce((sum, v) => sum + v, 0) / genericValues.length;
+                            content += `<div class="metric-value">${avg.toFixed(1)} <span class="metric-unit">(Avg)</span></div>`;
+                        } else {
+                            content += `<p class="metric-details">${metrics.length} data points collected</p>`;
+                        }
                 }
                 
                 // Add date range info
@@ -832,77 +1128,279 @@
                 return;
             }
 
+            // Get selected user info
+            const selectedUserId = userSelect.value;
+            const selectedUserText = userSelect.options[userSelect.selectedIndex].text;
+            const userEmail = selectedUserText.split(' (ID:')[0]; // Extract email from "email (ID: X)" format
+
             // Prepare CSV data
             const csvRows = [];
-            const headers = ["Date", "Metric Type", "Value", "Unit", "Details"];
+            const headers = ["User Email", "Date", "Metric Type", "Value", "Unit", "Details"];
             csvRows.push(headers.join(","));
 
             currentMetricsData.forEach(metric => {
                 const date = metric.date || "N/A";
                 const type = metric.type || "N/A";
-                let value = "N/A";
-                let unit = "";
-                let details = "";
 
-                // Extract relevant data based on metric type
-                switch (metric.type) {
-                    case "sleep":
-                        value = metric.object.score || "N/A";
-                        unit = "Score";
-                        if (metric.object.details && metric.object.details.quick_metrics) {
-                            details = metric.object.details.quick_metrics.map(qm => `${qm.title}: ${qm.display_text}`).join("; ");
+                // Handle sleep metrics by creating multiple CSV rows for each sleep component
+                if (metric.type === "sleep" || metric.type === "Sleep") {
+                    const hasAnyData = Object.keys(metric.object).length > 0;
+                    const hasFullSleepData = metric.object.bedtime_start && metric.object.bedtime_end;
+                    
+                    if (hasFullSleepData) {
+                        const bedtimeStart = new Date(metric.object.bedtime_start * 1000);
+                        const bedtimeEnd = new Date(metric.object.bedtime_end * 1000);
+                        const duration = (metric.object.bedtime_end - metric.object.bedtime_start) / 3600;
+                        
+                        // Bedtime
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            "Bedtime",
+                            bedtimeStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+                            "Time",
+                            "Sleep start time"
+                        ].join(","));
+                        
+                        // Wake time
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            "Wake Time",
+                            bedtimeEnd.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+                            "Time",
+                            "Sleep end time"
+                        ].join(","));
+                        
+                        // Sleep duration
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            "Sleep Duration",
+                            duration.toFixed(1),
+                            "hours",
+                            "Total time in bed"
+                        ].join(","));
+                        
+                        // Sleep heart rate metrics
+                        if (metric.object.hr_graph && metric.object.hr_graph.gist_object) {
+                            const hrGist = metric.object.hr_graph.gist_object;
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Sleep Heart Rate (Lowest)",
+                                hrGist.detail_text || hrGist.min || "N/A",
+                                "BPM",
+                                hrGist.title || "Lowest heart rate during sleep"
+                            ].join(","));
+                            
+                            if (hrGist.avg) {
+                                csvRows.push([
+                                    userEmail,
+                                    date,
+                                    "Sleep Heart Rate (Average)",
+                                    hrGist.avg,
+                                    "BPM",
+                                    "Average heart rate during sleep"
+                                ].join(","));
+                            }
                         }
-                        break;
+                        
+                        // Sleep HRV metrics
+                        if (metric.object.hrv_graph && metric.object.hrv_graph.gist_object) {
+                            const hrvGist = metric.object.hrv_graph.gist_object;
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Sleep HRV Zone",
+                                hrvGist.detail_text || "N/A",
+                                "ms",
+                                hrvGist.title || "HRV zone during sleep"
+                            ].join(","));
+                            
+                            if (hrvGist.avg) {
+                                csvRows.push([
+                                    userEmail,
+                                    date,
+                                    "Sleep HRV (Average)",
+                                    hrvGist.avg,
+                                    "ms",
+                                    "Average HRV during sleep"
+                                ].join(","));
+                            }
+                        }
+                    } else if (!hasAnyData) {
+                        // Handle empty Sleep objects - no data available
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            "Sleep Status",
+                            "No Data Available",
+                            "Status",
+                            "No sleep data recorded for this date"
+                        ].join(","));
+                    } else {
+                        // Fallback for other sleep data formats (score-based, etc.)
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            type,
+                            metric.object.score || metric.object.value || "N/A",
+                            "Score",
+                            metric.object.subtitle || ""
+                        ].join(","));
+                    }
+                } else {
+                    // Handle non-sleep metrics with original logic
+                    let value = "N/A";
+                    let unit = "";
+                    let details = "";
+
+                    switch (metric.type) {
                     case "hr":
+                    case "heart_rate":
+                        value = metric.object.avg || metric.object.last_reading || metric.object.value || "N/A";
+                        unit = metric.object.unit || "BPM";
+                        details = metric.object.subtitle || metric.object.title || "";
+                        break;
                     case "temp":
+                    case "temperature":
+                        value = metric.object.avg || metric.object.last_reading || metric.object.value || "N/A";
+                        unit = metric.object.unit || "°C";
+                        details = metric.object.subtitle || metric.object.title || "";
+                        break;
                     case "hrv":
+                    case "heart_rate_variability":
+                        value = metric.object.avg || metric.object.last_reading || metric.object.value || "N/A";
+                        unit = metric.object.unit || "ms";
+                        details = metric.object.subtitle || metric.object.title || "";
+                        break;
                     case "night_rhr":
-                        value = metric.object.avg || metric.object.last_reading || "N/A";
-                        unit = metric.object.unit || (metric.type === "hrv" ? "ms" : "");
-                        details = metric.object.subtitle || "";
+                    case "resting_heart_rate":
+                        value = metric.object.avg || metric.object.last_reading || metric.object.value || "N/A";
+                        unit = metric.object.unit || "BPM";
+                        details = metric.object.subtitle || metric.object.title || "Sleep Time Average";
+                        break;
+                    case "avg_sleep_hrv":
+                        value = metric.object.avg || metric.object.value || "N/A";
+                        unit = metric.object.unit || "ms";
+                        details = "Average Sleep HRV";
                         break;
                     case "steps":
-                        value = metric.object.avg || "N/A";
+                        value = metric.object.avg || metric.object.total || metric.object.value || "N/A";
                         unit = "Steps";
+                        details = metric.object.subtitle || metric.object.title || "";
+                        break;
+                    case "glucose":
+                        // Handle glucose with values array or direct value
+                        if (metric.object.values && metric.object.values.length > 0) {
+                            // Calculate average from values array
+                            const avgGlucose = metric.object.values.reduce((sum, v) => sum + (v.value || v), 0) / metric.object.values.length;
+                            value = avgGlucose.toFixed(1);
+                        } else {
+                            value = metric.object.avg || metric.object.value || metric.object.last_reading || "N/A";
+                        }
+                        unit = metric.object.unit || "mg/dL";
+                        details = metric.object.title || "Glucose";
+                        break;
+                    case "metabolic_score":
+                        value = metric.object.score || metric.object.value || "N/A";
+                        unit = metric.object.unit || "Score";
+                        details = "Metabolic Score";
+                        break;
+                    case "glucose_variability":
+                        value = metric.object.percentage || metric.object.value || "N/A";
+                        unit = metric.object.unit || "%";
+                        details = "Glucose Variability";
+                        break;
+                    case "average_glucose":
+                        value = metric.object.avg || metric.object.value || "N/A";
+                        unit = metric.object.unit || "mg/dL";
+                        details = "Average Glucose";
+                        break;
+                    case "hba1c":
+                        value = metric.object.value || metric.object.percentage || "N/A";
+                        unit = metric.object.unit || "%";
+                        details = "HbA1c";
+                        break;
+                    case "time_in_target":
+                        value = metric.object.percentage || metric.object.value || "N/A";
+                        unit = metric.object.unit || "%";
+                        details = "Time in Target";
+                        break;
+                    case "recovery_index":
+                        value = metric.object.value || metric.object.score || metric.object.index || "N/A";
+                        unit = metric.object.unit || "Index";
+                        details = metric.object.title || "Recovery Index";
+                        break;
+                    case "movement_index":
+                        value = metric.object.value || metric.object.score || metric.object.index || "N/A";
+                        unit = metric.object.unit || "Index";
+                        details = metric.object.title || "Movement Index";
+                        break;
+                    case "active_minutes":
+                        value = metric.object.value || metric.object.total || "N/A";
+                        unit = metric.object.unit || "Minutes";
+                        details = metric.object.title || "Active Minutes";
+                        break;
+                    case "vo2_max":
+                        value = metric.object.value || metric.object.score || "N/A";
+                        unit = metric.object.unit || "ml/kg/min";
+                        details = "VO2 Max";
+                        break;
+                    case "sleep_rhr":
+                        value = metric.object.value || metric.object.avg || "N/A";
+                        unit = metric.object.unit || "BPM";
+                        details = "Sleep Resting Heart Rate";
+                        break;
+                    case "avg_sleep_hrv":
+                        value = metric.object.value || "N/A";
+                        unit = "ms";
+                        details = "Average Sleep HRV";
                         break;
                     default:
-                        value = metric.object.value || metric.object.score || metric.object.avg || "N/A";
+                        // Generic fallback for unknown metric types
+                        value = metric.object.value || metric.object.score || metric.object.avg || 
+                               metric.object.total || metric.object.percentage || metric.object.index || 
+                               metric.object.last_reading || "N/A";
                         unit = metric.object.unit || "";
-                        details = metric.object.title || "";
-                }
-
-                // Escape commas and quotes in CSV data
-                const escapeCsvField = (field) => {
-                    if (typeof field === "string" && (field.includes(",") || field.includes('"'))) {
-                        return `"${field.replace(/"/g, '""')}"`;
+                        details = metric.object.title || metric.object.subtitle || metric.object.description || "";
                     }
-                    return field;
-                };
 
-                csvRows.push([
-                    escapeCsvField(date),
-                    escapeCsvField(type),
-                    escapeCsvField(value),
-                    escapeCsvField(unit),
-                    escapeCsvField(details)
-                ].join(","));
+                    // Add CSV row for non-sleep metrics
+                    // Escape commas and quotes in CSV data
+                    const escapeCsvField = (field) => {
+                        if (typeof field === "string" && (field.includes(",") || field.includes('"'))) {
+                            return `"${field.replace(/"/g, '""')}"`;
+                        }
+                        return field;
+                    };
+
+                    csvRows.push([
+                        escapeCsvField(userEmail),
+                        escapeCsvField(date),
+                        escapeCsvField(type),
+                        escapeCsvField(value),
+                        escapeCsvField(unit),
+                        escapeCsvField(details)
+                    ].join(","));
+                }
             });
 
-            // Create and download CSV file
+            // Continue with the rest of the CSV export function
             const csvContent = csvRows.join("\n");
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-            const link = document.createElement("a");
-            
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                const dateStr = singleDateMode.checked ? dateSelect.value : `${startDateSelect.value}_to_${endDateSelect.value}`;
-                link.setAttribute("download", `ultrahuman_data_${dateStr}.csv`);
-                link.style.visibility = "hidden";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            const url = URL.createObjectURL(blob);
+
+            // Create download link
+            const downloadLink = document.createElement("a");
+            downloadLink.href = url;
+            const dateStr = singleDateMode.checked ? dateSelect.value : `${startDateSelect.value}_to_${endDateSelect.value}`;
+            downloadLink.download = `ultrahuman_data_${dateStr}.csv`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(url);
         }
 
         // --- Charting Functions ---
