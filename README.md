@@ -33,13 +33,13 @@ This guide provides step-by-step installation instructions for users new to Pyth
 git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
 ```
 
----
+### Step 2: Install Python and Set Up the Dashboard
 
-## Installation Guide
+Choose your operating system:
 
-### For Mac Users
+## For Mac Users
 
-#### Step 1: Install Python
+### Install Python
 
 1. **Check if Python is already installed:**
    - Open **Terminal** (press `Cmd + Space`, type "Terminal", press Enter)
@@ -62,7 +62,7 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
    - Download the latest Python 3.x version for macOS
    - Double-click the installer and follow the prompts
 
-#### Step 2: Set Up the Dashboard
+### Set Up the Dashboard
 
 1. **Open Terminal and navigate to your project folder:**
    ```bash
@@ -96,9 +96,9 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
    http://localhost:8000
    ```
 
-### For Windows Users
+## For Windows Users
 
-#### Step 1: Install Python
+### Install Python
 
 1. **Check if Python is already installed:**
    - Press `Win + R`, type `cmd`, press Enter to open Command Prompt
@@ -113,7 +113,7 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
    - Click **"Install Now"**
    - Restart your computer after installation
 
-#### Step 2: Set Up the Dashboard
+### Set Up the Dashboard
 
 1. **Open Command Prompt:**
    - Press `Win + R`, type `cmd`, press Enter
@@ -150,6 +150,10 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
    ```
    http://localhost:8000
    ```
+
+### Step 3: First Time Setup
+
+Continue to the sections below for database setup and adding your Ultrahuman credentials.
 
 ---
 
@@ -202,10 +206,6 @@ CREATE TABLE user (
 cp database.db database_backup.db  # Mac/Linux
 copy database.db database_backup.db # Windows
 ```
-
----
-
-## First Time Setup
 
 ### Getting Your Ultrahuman API Credentials
 
