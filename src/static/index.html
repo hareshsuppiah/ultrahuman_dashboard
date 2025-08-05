@@ -117,8 +117,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
     <script>
-        const userApiUrl = "." + "/api/users"; // Relative path prefix
-        const metricsApiUrlBase = "." + "/api/metrics"; // Relative path prefix
+        const userApiUrl = "/api/users"; // Relative path prefix
+        const metricsApiUrlBase = "/api/metrics"; // Relative path prefix
 
         const userTableBody = document.getElementById("user-table").querySelector("tbody");
         const userSelect = document.getElementById("user-select");
@@ -208,9 +208,9 @@
             });
         }
 
-        function showUserForm(isEdit = false, id = null, email = ".", apiKey = ".", accessCode = ".") {
+        function showUserForm(isEdit = false, id = null, email = "", apiKey = "", accessCode = "") {
             userForm.reset();
-            userIdInput.value = id || ".";
+            userIdInput.value = id || "";
             emailInput.value = email;
             apiKeyInput.value = apiKey;
             accessCodeInput.value = accessCode;
@@ -224,7 +224,7 @@
             userFormSection.style.display = "none";
             userListSection.style.display = "block";
             userForm.reset();
-            userIdInput.value = ".";
+            userIdInput.value = "";
             clearError(userFormError);
         }
 
@@ -251,7 +251,14 @@
                     body: JSON.stringify(userData),
                 });
 
-                const result = await response.json();
+                let result;
+                try {
+                    result = await response.json();
+                } catch (jsonError) {
+                    // If JSON parsing fails, get the text response for better error reporting
+                    const textResponse = await response.text();
+                    throw new Error(`Server returned invalid JSON. Status: ${response.status}. Response: ${textResponse.substring(0, 200)}...`);
+                }
 
                 if (!response.ok) {
                     throw new Error(result.error || `HTTP error! status: ${response.status}`);
@@ -305,7 +312,7 @@
             const date = dateSelect.value;
 
             clearError(dashboardError);
-            metricsDisplay.innerHTML = "."; // Clear previous metrics
+            metricsDisplay.innerHTML = ""; // Clear previous metrics
             destroyCharts(); // Destroy old charts before creating new ones
 
             if (!userId) {
@@ -345,7 +352,7 @@
         }
 
         function displayMetrics(metricData) {
-            metricsDisplay.innerHTML = "."; // Clear previous content
+            metricsDisplay.innerHTML = ""; // Clear previous content
             metricData.forEach(metric => {
                 const card = document.createElement("div");
                 card.className = "metric-card";
