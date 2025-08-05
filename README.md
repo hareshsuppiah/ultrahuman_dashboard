@@ -1,18 +1,18 @@
-# Ultra Human Dashboard 🏃‍♂️📊
+# Ultrahuman Dashboard
 
-A comprehensive Python web dashboard for visualizing and analyzing your Ultra Human ring data locally. Get detailed insights into your sleep, heart rate, HRV, glucose levels, and more!
+A comprehensive Python web dashboard for visualizing and analyzing your Ultrahuman ring data locally. Get detailed insights into your sleep, heart rate, HRV, glucose levels, and more!
 
 ---
 
-## 🚀 What This Project Does
+## What This Project Does
 
 This dashboard provides:
-- **📈 Comprehensive Health Analytics**: Sleep patterns, heart rate, HRV, glucose monitoring, and more
-- **🌙 Advanced Sleep Tracking**: Separate cards for bedtime, wake time, duration, sleep HR, and sleep HRV
-- **📊 Interactive Charts**: Real-time visualizations of your health metrics
-- **📁 Detailed CSV Exports**: Export all your data with individual sleep metrics as separate rows
-- **📅 Multi-Day Analysis**: Compare trends across date ranges
-- **🔒 Privacy-First**: All data stays local on your machine
+- **Comprehensive Health Analytics**: Sleep patterns, heart rate, HRV, glucose monitoring, and more
+- **Advanced Sleep Tracking**: Separate cards for bedtime, wake time, duration, sleep HR, and sleep HRV
+- **Interactive Charts**: Real-time visualizations of your health metrics
+- **Detailed CSV Exports**: Export all your data with individual sleep metrics as separate rows
+- **Multi-Day Analysis**: Compare trends across date ranges
+- **Privacy-First**: All data stays local on your machine
 
 ---
 
@@ -20,7 +20,7 @@ This dashboard provides:
 
 This guide provides step-by-step installation instructions for users new to Python development.
 
-### 🔗 Step 1: Download the Project
+### Step 1: Download the Project
 
 **Option A: Using GitHub (Recommended)**
 1. Go to: https://github.com/hareshsuppiah/ultrahuman_dashboard
@@ -35,9 +35,9 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
 
 ---
 
-## 🖥️ Installation Guide
+## Installation Guide
 
-### 🍎 For Mac Users
+### For Mac Users
 
 #### Step 1: Install Python
 
@@ -96,7 +96,7 @@ git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
    http://localhost:8000
    ```
 
-### 🪟 For Windows Users
+### For Windows Users
 
 #### Step 1: Install Python
 
@@ -162,11 +162,11 @@ When you run `python src/main.py` for the first time, the application will:
 1. Create `database.db` in your project folder
 2. Set up the user table with the following structure:
    - `id`: Unique identifier for each user
-   - `email`: Your Ultra Human account email
-   - `api_key`: Your Ultra Human API key
-   - `access_code`: Your Ultra Human access code
+   - `email`: Your Ultrahuman account email
+   - `api_key`: Your Ultrahuman API key
+   - `access_code`: Your Ultrahuman access code
 
-### 🔍 Database Details
+### Database Details
 
 **File Location:** `ultrahuman_dashboard/database.db`
 
@@ -186,7 +186,7 @@ CREATE TABLE user (
 - Your data stays completely local
 - Database file is automatically excluded from GitHub
 
-### 🔄 Database Management
+### Database Management
 
 **If you need to reset your database:**
 1. **Stop the dashboard** (Ctrl + C in terminal)
@@ -205,17 +205,17 @@ copy database.db database_backup.db # Windows
 
 ---
 
-## 🎯 First Time Setup
+## First Time Setup
 
-### 🔑 Getting Your Ultra Human API Credentials
+### Getting Your Ultrahuman API Credentials
 
-1. **Contact Ultra Human Support** to request Partnership API access
+1. **Contact Ultrahuman Support** to request Partnership API access
 2. You'll need:
    - Your email address
    - API Key (long string starting with "eyJ...")
    - Access Code (short code like "ABCD1234")
 
-### 📝 Adding Your Credentials
+### Adding Your Credentials
 
 1. Start the dashboard for the first time:
    ```bash
@@ -228,7 +228,7 @@ copy database.db database_backup.db # Windows
 3. Click "Add New User"
 
 4. Enter your information:
-   - Email: Your Ultra Human account email
+   - Email: Your Ultrahuman account email
    - API Key: The long key you received
    - Access Code: The short code you received
 
@@ -238,9 +238,9 @@ Your credentials are now securely stored in your local database and you can begi
 
 ---
 
-## 💡 How to Use the Dashboard
+## How to Use the Dashboard
 
-### 📊 Viewing Your Data
+### Viewing Your Data
 
 1. **Select yourself** from the user dropdown
 2. **Choose your view:**
@@ -248,7 +248,7 @@ Your credentials are now securely stored in your local database and you can begi
    - **Date Range**: Compare trends across multiple days (up to 30 days)
 3. **Pick your date(s)** and click **"Fetch Data"**
 
-### 🌙 Sleep Analysis Features
+### Sleep Analysis Features
 
 **Single Day View:**
 - **Bedtime Card**: Exact time you went to sleep
@@ -264,7 +264,7 @@ Your credentials are now securely stored in your local database and you can begi
 - **Sleep Heart Rate Trends**: Average HR during sleep
 - **Sleep HRV Trends**: Average HRV during sleep
 
-### 📁 Exporting Your Data
+### Exporting Your Data
 
 1. **Select your data** (single day or date range)
 2. **Click "Export to CSV"**
@@ -276,33 +276,33 @@ Your credentials are now securely stored in your local database and you can begi
 
 ---
 
-## 📂 Understanding Your Data
+## Understanding Your Data
 
-### 🌙 Sleep Metrics
+### Sleep Metrics
 - **Bedtime/Wake Time**: Exact times with consistency analysis
 - **Sleep Duration**: Total time in bed
 - **Sleep Heart Rate**: Lowest and average HR during sleep
 - **Sleep HRV**: Heart rate variability zones and averages
 
-### ❤️ Heart Rate Metrics
+### Heart Rate Metrics
 - **Resting HR**: Daily resting heart rate
 - **Heart Rate Trends**: Throughout the day with interactive charts
 
-### 🩸 Glucose Monitoring
+### Glucose Monitoring
 - **Glucose Levels**: Blood glucose measurements
 - **Metabolic Score**: Overall metabolic health indicator
 - **Glucose Variability**: How much your glucose fluctuates
 
-### 🏃‍♂️ Activity Metrics
+### Activity Metrics
 - **Steps**: Daily step count
 - **Active Minutes**: Time spent in active movement
 - **VO2 Max**: Cardiovascular fitness indicator
 
 ---
 
-## 🔧 Daily Usage
+## Daily Usage
 
-### ⚡ Quick Start (After Initial Setup)
+### Quick Start (After Initial Setup)
 1. **Open Terminal/Command Prompt**
 2. **Navigate to your project:**
    ```bash
@@ -320,44 +320,44 @@ Your credentials are now securely stored in your local database and you can begi
    ```
 5. **Open browser:** http://localhost:8000
 
-### 🛑 Stopping the Dashboard
+### Stopping the Dashboard
 - **Stop the server:** Press `Ctrl + C` in terminal
 - **Exit virtual environment:** Type `deactivate`
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 ultrahuman_dashboard/
-├── 📄 README.md              # This guide
-├── 📋 requirements.txt       # Python packages needed
-├── 🗄️ database.db           # Your personal data (AUTO-CREATED when you first run the app)
-├── 🚫 .gitignore            # Protects your personal data from being uploaded
-├── 📁 src/                  # Application code
-│   ├── 🐍 main.py          # Main server file (creates database automatically)
-│   ├── 📁 models/          # Database structure definitions
-│   │   └── 👤 user.py      # User table structure (id, email, api_key, access_code)
-│   ├── 📁 routes/          # API endpoints
-│   │   ├── 👤 user.py      # User management endpoints
-│   │   └── 📊 metrics.py   # Ultra Human API data endpoints
-│   └── 📁 static/          # Web interface
-│       └── 🌐 index.html   # Dashboard interface
-├── 📁 Samples/             # Example data files
-└── 📁 venv/               # Virtual environment (CREATED DURING SETUP)
+├── README.md              # This guide
+├── requirements.txt       # Python packages needed
+├── database.db           # Your personal data (AUTO-CREATED when you first run the app)
+├── .gitignore            # Protects your personal data from being uploaded
+├── src/                  # Application code
+│   ├── main.py          # Main server file (creates database automatically)
+│   ├── models/          # Database structure definitions
+│   │   └── user.py      # User table structure (id, email, api_key, access_code)
+│   ├── routes/          # API endpoints
+│   │   ├── user.py      # User management endpoints
+│   │   └── metrics.py   # Ultrahuman API data endpoints
+│   └── static/          # Web interface
+│       └── index.html   # Dashboard interface
+├── Samples/             # Example data files
+└── venv/               # Virtual environment (CREATED DURING SETUP)
 ```
 
 **Key Files Explained:**
-- 🗄️ **database.db**: SQLite database created automatically on first run
-- 👤 **models/user.py**: Defines the database table structure
-- 🐍 **main.py**: Contains the database creation code (`db.create_all()`)
-- 🚫 **.gitignore**: Ensures database.db never gets uploaded to GitHub
+- **database.db**: SQLite database created automatically on first run
+- **models/user.py**: Defines the database table structure
+- **main.py**: Contains the database creation code (`db.create_all()`)
+- **.gitignore**: Ensures database.db never gets uploaded to GitHub
 
 ---
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
-### ❌ Common Errors and Solutions
+### Common Errors and Solutions
 
 **"Python not found"**
 ```bash
@@ -388,7 +388,7 @@ pip install -r requirements.txt
 - It stays on your local machine and is never uploaded to GitHub
 - If corrupted, just delete it and restart the app - it will be recreated automatically
 
-### 🆘 Need Help?
+### Need Help?
 
 1. **Check you completed ALL installation steps**
 2. **Verify your virtual environment is activated** (look for `(venv)` in terminal)
@@ -398,7 +398,7 @@ pip install -r requirements.txt
 
 ---
 
-## 🔒 Privacy & Security
+## Privacy & Security
 
 - All data stays on your machine - nothing is sent to external servers
 - Database file is excluded from GitHub - your personal data never gets uploaded
@@ -407,23 +407,23 @@ pip install -r requirements.txt
 
 ---
 
-## 🎉 Features Overview
+## Features Overview
 
-### 📊 Dashboard Features
+### Dashboard Features
 - **Real-time health metrics visualization**
 - **Interactive charts with zoom and pan**
 - **Multi-day trend analysis**
 - **Clean, minimalist design**
 - **Mobile-responsive interface**
 
-### 📁 Export Features
+### Export Features
 - **Comprehensive CSV exports**
 - **Individual sleep metrics as separate rows**
 - **Data quality indicators**
 - **Date range flexibility**
 - **User email tracking**
 
-### 🌙 Sleep Analysis
+### Sleep Analysis
 - **Detailed sleep stage breakdown**
 - **Heart rate during sleep tracking**
 - **HRV monitoring during sleep**
@@ -432,17 +432,17 @@ pip install -r requirements.txt
 
 ---
 
-## 🤝 Support
+## Support
 
-This project is designed for personal use with Ultra Human ring data. If you encounter issues:
+This project is designed for personal use with Ultrahuman ring data. If you encounter issues:
 
 1. **Follow the troubleshooting guide above**
-2. **Check that your Ultra Human API credentials are correct**
+2. **Check that your Ultrahuman API credentials are correct**
 3. **Ensure your virtual environment is properly activated**
 4. **Verify all installation steps were completed**
 
 ---
 
-## 📜 License
+## License
 
-This project is for personal use with Ultra Human ring data. Keep your API credentials secure and never share them publicly.
+This project is for personal use with Ultrahuman ring data. Keep your API credentials secure and never share them publicly.
