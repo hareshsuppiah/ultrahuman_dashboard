@@ -1164,14 +1164,13 @@
                             
                             // Average Bedtime
                             if (bedtimes.length > 0) {
-                                const avgBedtime = bedtimes.reduce((sum, time) => sum + time, 0) / bedtimes.length;
-                                const bedtimeHour = Math.floor(avgBedtime);
-                                const bedtimeMin = Math.round((avgBedtime - bedtimeHour) * 60);
+                                const avgBedtime = calculateCircularMean(bedtimes, 'bedtime');
+                                const bedtimeFormatted = formatTimeForDisplay(avgBedtime, 'bedtime');
                                 const bedtimeCard = document.createElement("div");
                                 bedtimeCard.className = "metric-card";
                                 bedtimeCard.innerHTML = `
                                     <h3>AVG BEDTIME (${dateRange.length} days)</h3>
-                                    <div class="metric-value">${bedtimeHour}:${bedtimeMin.toString().padStart(2, '0')} <span class="metric-unit">PM</span></div>
+                                    <div class="metric-value">${bedtimeFormatted.displayTime.replace(' ', ' <span class="metric-unit">') + '</span>'}</div>
                                     <p class="metric-details">Average sleep start time</p>
                                 `;
                                 metricsDisplay.appendChild(bedtimeCard);
@@ -1179,14 +1178,13 @@
                             
                             // Average Wake Time
                             if (waketimes.length > 0) {
-                                const avgWaketime = waketimes.reduce((sum, time) => sum + time, 0) / waketimes.length;
-                                const waketimeHour = Math.floor(avgWaketime);
-                                const waketimeMin = Math.round((avgWaketime - waketimeHour) * 60);
+                                const avgWaketime = calculateCircularMean(waketimes, 'waketime');
+                                const waketimeFormatted = formatTimeForDisplay(avgWaketime, 'waketime');
                                 const waketimeCard = document.createElement("div");
                                 waketimeCard.className = "metric-card";
                                 waketimeCard.innerHTML = `
                                     <h3>AVG WAKE TIME (${dateRange.length} days)</h3>
-                                    <div class="metric-value">${waketimeHour}:${waketimeMin.toString().padStart(2, '0')} <span class="metric-unit">AM</span></div>
+                                    <div class="metric-value">${waketimeFormatted.displayTime.replace(' ', ' <span class="metric-unit">') + '</span>'}</div>
                                     <p class="metric-details">Average wake up time</p>
                                 `;
                                 metricsDisplay.appendChild(waketimeCard);
@@ -1703,6 +1701,113 @@
             });
         }
 
+        // --- Time Averaging Utilities ---
+        /**
+         * Calculate circular mean for time values that may cross midnight
+         * @param {number[]} times - Array of time values in decimal hours (0-24)
+         * @param {string} timeType - 'bedtime' or 'waketime' for context-specific logic
+         * @returns {number} - Circular mean in decimal hours
+         */
+        function calculateCircularMean(times, timeType = 'bedtime') {
+            if (!times || times.length === 0) return 0;
+            if (times.length === 1) return times[0];
+            
+            // Check if we need circular averaging by detecting midnight boundary crossing
+            if (!needsCircularAveraging(times, timeType)) {
+                // Use simple arithmetic mean if no midnight crossing detected
+                return times.reduce((sum, time) => sum + time, 0) / times.length;
+            }
+            
+            // Convert times to radians (0-24 hours → 0-2π radians)
+            let sinSum = 0;
+            let cosSum = 0;
+            
+            times.forEach(time => {
+                const angleRad = (time * 2 * Math.PI) / 24;
+                sinSum += Math.sin(angleRad);
+                cosSum += Math.cos(angleRad);
+            });
+            
+            // Calculate mean angle
+            const meanAngleRad = Math.atan2(sinSum, cosSum);
+            
+            // Convert back to hours (ensure positive result)
+            let meanTime = (meanAngleRad * 24) / (2 * Math.PI);
+            if (meanTime < 0) meanTime += 24;
+            
+            return meanTime;
+        }
+        
+        /**
+         * Detect if times cross midnight boundary and need circular averaging
+         * @param {number[]} times - Array of time values in decimal hours
+         * @param {string} timeType - 'bedtime' or 'waketime' for context-specific logic
+         * @returns {boolean} - True if circular averaging is needed
+         */
+        function needsCircularAveraging(times, timeType) {
+            if (times.length < 2) return false;
+            
+            const min = Math.min(...times);
+            const max = Math.max(...times);
+            
+            if (timeType === 'bedtime') {
+                // For bedtimes, check if we have times both before and after midnight
+                // Typical bedtime range: 9 PM (21) to 3 AM (3)
+                // If we have times < 6 (early morning) and times > 18 (evening), likely crossing midnight
+                return (min < 6 && max > 18);
+            } else if (timeType === 'waketime') {
+                // For wake times, less likely to cross midnight but possible for shift workers
+                // Typical wake time range: 5 AM (5) to 11 AM (11)
+                // If we have times < 6 (very early) and times > 18 (evening), likely crossing
+                return (min < 6 && max > 18);
+            }
+            
+            return false;
+        }
+        
+        /**
+         * Format time for display with proper AM/PM logic
+         * @param {number} timeDecimal - Time in decimal hours (0-24)
+         * @param {string} timeType - 'bedtime' or 'waketime' for context
+         * @returns {object} - {hour, minute, period, displayTime}
+         */
+        function formatTimeForDisplay(timeDecimal, timeType) {
+            let hour = Math.floor(timeDecimal);
+            const minute = Math.round((timeDecimal - hour) * 60);
+            
+            // Handle minute overflow
+            if (minute >= 60) {
+                hour += 1;
+                if (hour >= 24) hour = 0;
+            }
+            
+            let period, displayHour;
+            
+            if (hour === 0) {
+                displayHour = 12;
+                period = 'AM';
+            } else if (hour < 12) {
+                displayHour = hour;
+                period = 'AM';
+            } else if (hour === 12) {
+                displayHour = 12;
+                period = 'PM';
+            } else {
+                displayHour = hour - 12;
+                period = 'PM';
+            }
+            
+            const formattedMinute = Math.max(0, Math.min(59, minute)).toString().padStart(2, '0');
+            const displayTime = `${displayHour}:${formattedMinute} ${period}`;
+            
+            return {
+                hour: displayHour,
+                minute: Math.max(0, Math.min(59, minute)),
+                period,
+                displayTime
+            };
+        }
+
         // --- Tab Navigation Functions ---
         function switchTab(tabName) {
             // Remove active class from all tabs and content
@@ -2011,6 +2116,40 @@
                 }
             });
         });
+
+        // --- Testing/Validation Functions (can be removed in production) ---
+        function testCircularMean() {
+            console.log('=== Testing Circular Mean Function ===');
+            
+            // Test Case 1: Normal bedtimes (no midnight crossing)
+            const normalBedtimes = [22.5, 23.0, 22.75]; // 10:30 PM, 11:00 PM, 10:45 PM
+            const normalAvg = calculateCircularMean(normalBedtimes, 'bedtime');
+            console.log('Normal bedtimes:', normalBedtimes.map(t => formatTimeForDisplay(t, 'bedtime').displayTime));
+            console.log('Average (should be ~10:55 PM):', formatTimeForDisplay(normalAvg, 'bedtime').displayTime);
+            
+            // Test Case 2: Bedtimes crossing midnight (the problem case)
+            const midnightBedtimes = [23.5, 0.5, 23.0]; // 11:30 PM, 12:30 AM, 11:00 PM
+            const midnightAvg = calculateCircularMean(midnightBedtimes, 'bedtime');
+            console.log('\\nMidnight-crossing bedtimes:', midnightBedtimes.map(t => formatTimeForDisplay(t, 'bedtime').displayTime));
+            console.log('Average (should be ~11:40 PM):', formatTimeForDisplay(midnightAvg, 'bedtime').displayTime);
+            
+            // Test Case 3: Wake times
+            const wakeTimes = [7.0, 7.5, 6.75]; // 7:00 AM, 7:30 AM, 6:45 AM  
+            const wakeAvg = calculateCircularMean(wakeTimes, 'waketime');
+            console.log('\\nWake times:', wakeTimes.map(t => formatTimeForDisplay(t, 'waketime').displayTime));
+            console.log('Average (should be ~7:05 AM):', formatTimeForDisplay(wakeAvg, 'waketime').displayTime);
+            
+            // Test Case 4: Edge case - very late bedtimes
+            const veryLateBedtimes = [1.0, 2.0, 1.5]; // 1:00 AM, 2:00 AM, 1:30 AM
+            const veryLateAvg = calculateCircularMean(veryLateBedtimes, 'bedtime');
+            console.log('\\nVery late bedtimes:', veryLateBedtimes.map(t => formatTimeForDisplay(t, 'bedtime').displayTime));
+            console.log('Average (should be ~1:30 AM):', formatTimeForDisplay(veryLateAvg, 'bedtime').displayTime);
+            
+            console.log('=== End Testing ===\\n');
+        }
+        
+        // Uncomment the line below to run tests in browser console
+        // testCircularMean();
 
     </script>
 </body>
