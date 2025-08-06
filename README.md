@@ -11,6 +11,7 @@ This dashboard provides:
 - **Advanced Sleep Tracking**: Separate cards for bedtime, wake time, duration, sleep HR, and sleep HRV
 - **Interactive Charts**: Real-time visualizations of your health metrics
 - **Detailed CSV Exports**: Export all your data with individual sleep metrics as separate rows
+- **Multi-User Export**: Bulk CSV export for multiple users across date ranges
 - **Multi-Day Analysis**: Compare trends across date ranges
 - **Privacy-First**: All data stays local on your machine
 
@@ -240,13 +241,29 @@ Your credentials are now securely stored in your local database and you can begi
 
 ## How to Use the Dashboard
 
-### Viewing Your Data
+The dashboard features three main tabs:
 
+### 1. User Management Tab
+- **Add new users** with their Ultrahuman API credentials
+- **Edit existing users** to update credentials
+- **Delete users** when no longer needed
+- **View all registered users** in a clean table format
+
+### 2. Single User Dashboard Tab
+#### Viewing Your Data
 1. **Select yourself** from the user dropdown
 2. **Choose your view:**
    - **Single Day**: See detailed metrics for one specific day
    - **Date Range**: Compare trends across multiple days (up to 30 days)
 3. **Pick your date(s)** and click **"Fetch Data"**
+
+### 3. Multi-User Export Tab
+#### Bulk CSV Export
+1. **Select multiple users** using checkboxes (or use "Select All")
+2. **Choose date range** (up to 30 days)
+3. **Click "Export Selected Users Data to CSV"**
+4. **Monitor progress** as data is fetched for each user/date combination
+5. **Download** the combined CSV file with all users' data
 
 ### Sleep Analysis Features
 
@@ -266,6 +283,7 @@ Your credentials are now securely stored in your local database and you can begi
 
 ### Exporting Your Data
 
+#### Single User Export (Dashboard Tab)
 1. **Select your data** (single day or date range)
 2. **Click "Export to CSV"**
 3. **Your CSV will include:**
@@ -273,6 +291,15 @@ Your credentials are now securely stored in your local database and you can begi
    - All other health metrics
    - Your email for data tracking
    - Clear data quality indicators
+
+#### Multi-User Export (Multi-User Export Tab)
+1. **Select multiple users** via checkboxes
+2. **Choose date range** (up to 30 days)
+3. **Click "Export Selected Users Data to CSV"**
+4. **CSV combines all users' data with:**
+   - User email column to identify each user's data
+   - Same detailed metrics format as single-user export
+   - All selected users' data in one comprehensive file
 
 ---
 
@@ -410,6 +437,7 @@ pip install -r requirements.txt
 ## Features Overview
 
 ### Dashboard Features
+- **Tabbed interface** with User Management, Single User Dashboard, and Multi-User Export
 - **Real-time health metrics visualization**
 - **Interactive charts with zoom and pan**
 - **Multi-day trend analysis**
@@ -417,11 +445,13 @@ pip install -r requirements.txt
 - **Mobile-responsive interface**
 
 ### Export Features
-- **Comprehensive CSV exports**
+- **Single and multi-user CSV exports**
+- **Bulk data export** for multiple users simultaneously
 - **Individual sleep metrics as separate rows**
+- **Progress tracking** for bulk operations
 - **Data quality indicators**
-- **Date range flexibility**
-- **User email tracking**
+- **Date range flexibility** (up to 30 days)
+- **User email tracking** to identify data sources
 
 ### Sleep Analysis
 - **Detailed sleep stage breakdown**
