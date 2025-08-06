@@ -376,6 +376,23 @@
     <script>
         const userApiUrl = "/api/users"; // Relative path prefix
         const metricsApiUrlBase = "/api/metrics"; // Relative path prefix
+        
+        // Utility function for safe nested property access
+        function safeGet(obj, path, defaultValue = null) {
+            if (!obj || !path) return defaultValue;
+            
+            const keys = path.split('.');
+            let result = obj;
+            
+            for (const key of keys) {
+                if (result === null || result === undefined) {
+                    return defaultValue;
+                }
+                result = result[key];
+            }
+            
+            return result !== undefined ? result : defaultValue;
+        }
 
         const userTableBody = document.getElementById("user-table").querySelector("tbody");
         const userSelect = document.getElementById("user-select");
@@ -693,7 +710,18 @@
 
             } catch (error) {
                 console.error("Error fetching metrics:", error);
-                displayError(dashboardError, `Error fetching data: ${error.message}`);
+                let errorMessage = "Error fetching data. ";
+                
+                // Provide more helpful error messages based on the error type
+                if (error.message.includes("Cannot read properties")) {
+                    errorMessage = "Some metrics couldn't be displayed due to data format differences. This may happen if the user has a different device model or limited data availability for the selected period.";
+                } else if (error.message) {
+                    errorMessage += error.message;
+                } else {
+                    errorMessage += "Please try a different date range or contact support if the issue persists.";
+                }
+                
+                displayError(dashboardError, errorMessage);
             } finally {
                 loadingIndicator.style.display = "none";
                 loadingIndicator.textContent = "Loading data...";
@@ -910,6 +938,7 @@
         }
 
         function displayAggregatedMetrics(allMetricsData, dateRange) {
+            try {
             metricsDisplay.innerHTML = ""; // Clear previous content
             
             // Group metrics by type
@@ -956,12 +985,28 @@
                                 bedtimes.push(bedtime.getHours() + bedtime.getMinutes() / 60);
                                 waketimes.push(waketime.getHours() + waketime.getMinutes() / 60);
                             }
-                            if (m.object.hr_graph && m.object.hr_graph.gist_object) {
-                                totalHR += m.object.hr_graph.gist_object.avg || 0;
+                            
+                            // Handle HR data from multiple possible locations
+                            const hrFromGraph = safeGet(m.object, 'hr_graph.gist_object.avg');
+                            const hrFromQuickMetrics = m.object.quick_metrics?.find(
+                                metric => metric.type === 'avg_hr'
+                            )?.value;
+                            const hrValue = hrFromGraph || hrFromQuickMetrics;
+                            
+                            if (hrValue) {
+                                totalHR += hrValue;
                                 validHRCount++;
                             }
-                            if (m.object.hrv_graph && m.object.hrv_graph.gist_object) {
-                                totalHRV += m.object.hrv_graph.gist_object.avg || 0;
+                            
+                            // Handle HRV data from multiple possible locations
+                            const hrvFromGraph = safeGet(m.object, 'hrv_graph.gist_object.avg');
+                            const hrvFromQuickMetrics = m.object.quick_metrics?.find(
+                                metric => metric.type === 'avg_hrv'
+                            )?.value;
+                            const hrvValue = hrvFromGraph || hrvFromQuickMetrics;
+                            
+                            if (hrvValue) {
+                                totalHRV += hrvValue;
                                 validHRVCount++;
                             }
                         });
@@ -1120,6 +1165,15 @@
                 card.innerHTML = content;
                 metricsDisplay.appendChild(card);
             });
+            } catch (error) {
+                console.error("Error displaying aggregated metrics:", error);
+                // Display partial results if possible
+                if (metricsDisplay.innerHTML === "") {
+                    metricsDisplay.innerHTML = `<div class="error">Unable to display some metrics due to data format issues. This may occur for users with different device models or limited data availability.</div>`;
+                }
+                // Re-throw to be caught by the parent try-catch
+                throw error;
+            }
         }
 
         function exportToCSV() {
