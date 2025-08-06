@@ -245,7 +245,86 @@
             height: 250px; 
             position: relative; 
             margin-top: 16px; 
-        } 
+        }
+        /* Tab Navigation Styles */
+        .tabs {
+            display: flex;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e5e7eb;
+            margin: 0;
+            padding: 0;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 16px 24px;
+            background: none;
+            border: none;
+            border-radius: 0;
+            color: #6b7280;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+            box-shadow: none;
+            transform: none;
+        }
+        .tab-button:hover {
+            background-color: #f3f4f6;
+            color: #1a1a1a;
+            transform: none;
+            box-shadow: none;
+        }
+        .tab-button.active {
+            color: #1a1a1a;
+            background-color: #fff;
+            border-bottom: 3px solid #1a1a1a;
+            margin-bottom: -2px;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Multi-User Export Styles */
+        .user-checkbox-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            margin-bottom: 24px;
+        }
+        .user-checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 8px;
+            background-color: #fff;
+            border-radius: 4px;
+            transition: background-color 0.15s ease;
+        }
+        .user-checkbox-item:hover {
+            background-color: #f3f4f6;
+        }
+        .user-checkbox-item input[type="checkbox"] {
+            margin-right: 12px;
+            width: auto;
+        }
+        .user-checkbox-item label {
+            margin: 0;
+            font-weight: 500;
+            cursor: pointer;
+            flex: 1;
+        }
+        .select-all-container {
+            padding: 12px;
+            background-color: #e5e7eb;
+            border-radius: 6px 6px 0 0;
+            margin: -12px -12px 12px -12px;
+            border-bottom: 1px solid #d1d5db;
+        }
         #loading-indicator { 
             text-align: center; 
             padding: 24px; 
@@ -267,9 +346,16 @@
 <body>
     <div class="container">
         <h1>Ultrahuman Ring Device Dashboard</h1>
+        
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('user-management')">User Management</button>
+            <button class="tab-button" onclick="switchTab('single-dashboard')">Single User Dashboard</button>
+            <button class="tab-button" onclick="switchTab('multi-export')">Multi-User Export</button>
+        </div>
 
-        <!-- User Management Section -->
-        <div class="section" id="user-management">
+        <!-- User Management Tab -->
+        <div class="section tab-content active" id="user-management">
             <h2>User Management</h2>
             <div id="user-list-section">
                 <h3>Existing Users</h3>
@@ -316,8 +402,8 @@
             </div>
         </div>
 
-        <!-- Dashboard Section -->
-        <div class="section" id="dashboard">
+        <!-- Single User Dashboard Tab -->
+        <div class="section tab-content" id="single-dashboard">
             <h2>Dashboard</h2>
             <div class="form-group">
                 <label for="user-select">Select User:</label>
@@ -366,6 +452,52 @@
             <div id="metrics-display" class="metrics-grid" style="margin-top: 20px;">
                 <!-- Metrics will be displayed here -->
             </div>
+        </div>
+        
+        <!-- Multi-User Export Tab -->
+        <div class="section tab-content" id="multi-export">
+            <h2>Multi-User Data Export</h2>
+            
+            <div class="form-group">
+                <h3>Select Users</h3>
+                <div class="user-checkbox-list">
+                    <div class="select-all-container">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="select-all-users" style="margin-right: 12px; width: auto;">
+                            <strong>Select All Users</strong>
+                        </label>
+                    </div>
+                    <div id="user-checkboxes">
+                        <!-- User checkboxes will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <h3>Select Date Range</h3>
+                <div style="display: flex; gap: 16px;">
+                    <div style="flex: 1;">
+                        <label for="multi-start-date">Start Date:</label>
+                        <input type="date" id="multi-start-date">
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="multi-end-date">End Date:</label>
+                        <input type="date" id="multi-end-date">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="multi-export-button">Export Selected Users Data to CSV</button>
+            </div>
+            
+            <div id="multi-export-loading" style="display: none; text-align: center; padding: 20px; color: #6b7280;">
+                <div style="font-size: 1.125rem; font-weight: 600;">Processing Export...</div>
+                <div id="multi-export-progress" style="margin-top: 8px;">Initializing...</div>
+            </div>
+            
+            <div id="multi-export-error" class="error" style="display: none;"></div>
+            <div id="multi-export-success" class="success" style="display: none;"></div>
         </div>
     </div>
 
@@ -1571,6 +1703,179 @@
             });
         }
 
+        // --- Tab Navigation Functions ---
+        function switchTab(tabName) {
+            // Remove active class from all tabs and content
+            const tabs = document.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            // If switching to multi-export tab, populate user checkboxes
+            if (tabName === 'multi-export') {
+                populateUserCheckboxes();
+                setMultiExportDates();
+            }
+        }
+        
+        // Make switchTab global
+        window.switchTab = switchTab;
+        
+        // --- Multi-User Export Functions ---
+        function populateUserCheckboxes() {
+            const userCheckboxesDiv = document.getElementById('user-checkboxes');
+            userCheckboxesDiv.innerHTML = '';
+            
+            // Get users from the API
+            fetch(userApiUrl)
+                .then(response => response.json())
+                .then(users => {
+                    users.forEach(user => {
+                        const checkboxItem = document.createElement('div');
+                        checkboxItem.className = 'user-checkbox-item';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = `user-checkbox-${user.id}`;
+                        checkbox.value = user.id;
+                        
+                        const label = document.createElement('label');
+                        label.htmlFor = `user-checkbox-${user.id}`;
+                        label.textContent = `${user.email} (ID: ${user.id})`;
+                        
+                        checkboxItem.appendChild(checkbox);
+                        checkboxItem.appendChild(label);
+                        userCheckboxesDiv.appendChild(checkboxItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching users for checkboxes:', error);
+                    userCheckboxesDiv.innerHTML = '<p style="color: #ef4444;">Error loading users</p>';
+                });
+        }
+        
+        // Set today's date for multi-user export
+        function setMultiExportDates() {
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById('multi-start-date').value = today;
+            document.getElementById('multi-end-date').value = today;
+        }
+        
+        function exportMultiUserCSV(allUsersData, startDate, endDate) {
+            const csvRows = [];
+            const headers = ["User Email", "Date", "Metric Type", "Value", "Unit", "Details"];
+            csvRows.push(headers.join(","));
+            
+            allUsersData.forEach(metric => {
+                const userEmail = metric.userEmail || "N/A";
+                const date = metric.date || "N/A";
+                const type = metric.type || "N/A";
+                
+                // Handle sleep metrics by creating multiple CSV rows for each sleep component
+                if (metric.type === "sleep" || metric.type === "Sleep") {
+                    const hasFullSleepData = safeGet(metric, 'object.bedtime_start') && safeGet(metric, 'object.bedtime_end');
+                    
+                    if (hasFullSleepData) {
+                        const bedtimeStart = new Date(safeGet(metric, 'object.bedtime_start') * 1000);
+                        const bedtimeEnd = new Date(safeGet(metric, 'object.bedtime_end') * 1000);
+                        const duration = (safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start')) / 3600;
+                        
+                        // Bedtime
+                        csvRows.push([
+                            `"${userEmail}"`,
+                            date,
+                            "Bedtime",
+                            bedtimeStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+                            "Time",
+                            "Sleep start time"
+                        ].join(","));
+                        
+                        // Wake Time
+                        csvRows.push([
+                            `"${userEmail}"`,
+                            date,
+                            "Wake Time",
+                            bedtimeEnd.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+                            "Time",
+                            "Sleep end time"
+                        ].join(","));
+                        
+                        // Sleep Duration
+                        csvRows.push([
+                            `"${userEmail}"`,
+                            date,
+                            "Sleep Duration",
+                            duration.toFixed(1),
+                            "hours",
+                            "Total time in bed"
+                        ].join(","));
+                        
+                        // Sleep Heart Rate
+                        if (safeGet(metric, 'object.hr_graph.gist_object.avg')) {
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Sleep Heart Rate",
+                                safeGet(metric, 'object.hr_graph.gist_object.avg'),
+                                "bpm",
+                                `Min: ${safeGet(metric, 'object.hr_graph.gist_object.min', 'N/A')} bpm`
+                            ].join(","));
+                        }
+                        
+                        // Sleep HRV
+                        if (safeGet(metric, 'object.hrv_graph.gist_object.avg')) {
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Sleep HRV",
+                                safeGet(metric, 'object.hrv_graph.gist_object.avg'),
+                                "ms",
+                                `Min: ${safeGet(metric, 'object.hrv_graph.gist_object.min', 'N/A')} ms, Max: ${safeGet(metric, 'object.hrv_graph.gist_object.max', 'N/A')} ms`
+                            ].join(","));
+                        }
+                    }
+                } else {
+                    // Handle other metric types
+                    let value = "N/A";
+                    let unit = "";
+                    let details = "";
+                    
+                    if (metric.object) {
+                        value = safeGet(metric, 'object.value', 'N/A');
+                        unit = safeGet(metric, 'object.unit', '');
+                        details = safeGet(metric, 'object.description', '');
+                    }
+                    
+                    csvRows.push([
+                        `"${userEmail}"`,
+                        date,
+                        type,
+                        value,
+                        unit,
+                        `"${details}"`
+                    ].join(","));
+                }
+            });
+            
+            // Create and download CSV
+            const csvContent = csvRows.join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            
+            const downloadLink = document.createElement("a");
+            downloadLink.href = url;
+            downloadLink.download = `ultrahuman_multi_user_data_${startDate}_to_${endDate}.csv`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(url);
+        }
+        
         // --- Event Listeners ---
         showAddUserFormButton.addEventListener("click", () => showUserForm());
         cancelEditButton.addEventListener("click", hideUserForm);
@@ -1585,6 +1890,126 @@
             fetchUsers();
             setDateToToday();
             toggleDateMode(); // Initialize date mode display
+            
+            // Multi-user export event listeners
+            document.getElementById('select-all-users').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('#user-checkboxes input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+            
+            document.getElementById('multi-export-button').addEventListener('click', async function() {
+                const selectedUsers = [];
+                const checkboxes = document.querySelectorAll('#user-checkboxes input[type="checkbox"]:checked');
+                const startDate = document.getElementById('multi-start-date').value;
+                const endDate = document.getElementById('multi-end-date').value;
+                const loadingDiv = document.getElementById('multi-export-loading');
+                const progressDiv = document.getElementById('multi-export-progress');
+                const errorDiv = document.getElementById('multi-export-error');
+                const successDiv = document.getElementById('multi-export-success');
+                
+                // Clear previous messages
+                errorDiv.style.display = 'none';
+                successDiv.style.display = 'none';
+                
+                // Validation
+                if (checkboxes.length === 0) {
+                    errorDiv.textContent = 'Please select at least one user.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                
+                if (!startDate || !endDate) {
+                    errorDiv.textContent = 'Please select both start and end dates.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                
+                if (new Date(startDate) > new Date(endDate)) {
+                    errorDiv.textContent = 'Start date must be before or equal to end date.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                
+                const daysDiff = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
+                if (daysDiff > 30) {
+                    errorDiv.textContent = 'Date range cannot exceed 30 days.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                
+                // Get selected user IDs
+                checkboxes.forEach(checkbox => {
+                    selectedUsers.push({
+                        id: checkbox.value,
+                        email: checkbox.nextElementSibling.textContent.split(' (ID:')[0]
+                    });
+                });
+                
+                // Show loading
+                loadingDiv.style.display = 'block';
+                this.disabled = true;
+                
+                try {
+                    // Generate date range
+                    const dateRange = [];
+                    for (let d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
+                        dateRange.push(d.toISOString().split('T')[0]);
+                    }
+                    
+                    // Collect data for all users
+                    const allUsersData = [];
+                    let totalRequests = selectedUsers.length * dateRange.length;
+                    let completedRequests = 0;
+                    
+                    for (const user of selectedUsers) {
+                        const userMetrics = [];
+                        
+                        for (const date of dateRange) {
+                            completedRequests++;
+                            progressDiv.textContent = `Processing ${user.email}: ${date} (${completedRequests}/${totalRequests})`;
+                            
+                            try {
+                                const response = await fetch(`${metricsApiUrlBase}/${user.id}?date=${date}`);
+                                const result = await response.json();
+                                
+                                if (response.ok && result.data && result.data.metric_data) {
+                                    const dateMetrics = result.data.metric_data.map(metric => ({
+                                        ...metric,
+                                        date: date,
+                                        userEmail: user.email
+                                    }));
+                                    userMetrics.push(...dateMetrics);
+                                }
+                            } catch (error) {
+                                console.warn(`Failed to fetch data for ${user.email} on ${date}:`, error);
+                            }
+                        }
+                        
+                        allUsersData.push(...userMetrics);
+                    }
+                    
+                    if (allUsersData.length === 0) {
+                        throw new Error('No data found for the selected users and date range.');
+                    }
+                    
+                    // Export to CSV
+                    exportMultiUserCSV(allUsersData, startDate, endDate);
+                    
+                    successDiv.textContent = `Successfully exported data for ${selectedUsers.length} user(s) from ${startDate} to ${endDate}.`;
+                    successDiv.style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Error during multi-user export:', error);
+                    errorDiv.textContent = `Error: ${error.message}`;
+                    errorDiv.style.display = 'block';
+                } finally {
+                    loadingDiv.style.display = 'none';
+                    this.disabled = false;
+                    progressDiv.textContent = 'Initializing...';
+                }
+            });
         });
 
     </script>
