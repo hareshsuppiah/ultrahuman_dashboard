@@ -1092,12 +1092,25 @@
                     case "temp":
                     case "hrv":
                     case "night_rhr":
-                        const avgValue = metrics.reduce((sum, m) => sum + (m.object.avg || m.object.last_reading || 0), 0) / metrics.length;
-                        const unit = metrics[0]?.object.unit || (metricType === "hrv" ? "ms" : "");
+                        // Filter out invalid metrics and safely extract values
+                        const validMetrics = metrics.filter(m => m && m.object);
+                        const avgValue = validMetrics.reduce((sum, m) => {
+                            const avg = safeGet(m, 'object.avg', 0);
+                            const lastReading = safeGet(m, 'object.last_reading', 0);
+                            const value = safeGet(m, 'object.value', 0);
+                            return sum + (avg || lastReading || value || 0);
+                        }, 0) / (validMetrics.length || 1);
+                        
+                        const unit = safeGet(validMetrics[0], 'object.unit', '') || (metricType === "hrv" ? "ms" : "");
                         content += `<div class="metric-value">${avgValue.toFixed(1)} <span class="metric-unit">${unit} (Avg)</span></div>`;
                         
-                        // Show range if available
-                        const hrValues = metrics.map(m => m.object.avg || m.object.last_reading || 0).filter(v => v > 0);
+                        // Show range if available - use safe extraction
+                        const hrValues = validMetrics.map(m => {
+                            const avg = safeGet(m, 'object.avg', 0);
+                            const lastReading = safeGet(m, 'object.last_reading', 0);
+                            const value = safeGet(m, 'object.value', 0);
+                            return avg || lastReading || value || 0;
+                        }).filter(v => v > 0);
                         if (hrValues.length > 0) {
                             const minVal = Math.min(...hrValues);
                             const maxVal = Math.max(...hrValues);
