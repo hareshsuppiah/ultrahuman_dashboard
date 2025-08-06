@@ -446,6 +446,21 @@
                 <button id="fetch-data-button">Fetch Data</button>
                 <button id="export-csv-button" class="secondary hidden">Export to CSV</button>
             </div>
+            
+            <!-- CSV Export Format Selection -->
+            <div id="csv-format-selection" class="hidden" style="margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 6px;">
+                <h4 style="margin: 0 0 12px 0; color: #1a1a1a; font-size: 0.875rem;">CSV Export Format:</h4>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="single-format-long" name="single-csv-format" value="long" checked>
+                        <label for="single-format-long">Long Format (one row per metric)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="single-format-wide" name="single-csv-format" value="wide">
+                        <label for="single-format-wide">Wide Format (one row per day, metrics as columns)</label>
+                    </div>
+                </div>
+            </div>
             <div id="loading-indicator">Loading data...</div>
             <div id="dashboard-error" class="error"></div>
 
@@ -483,6 +498,21 @@
                     <div style="flex: 1;">
                         <label for="multi-end-date">End Date:</label>
                         <input type="date" id="multi-end-date">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CSV Export Format Selection for Multi-User -->
+            <div class="form-group">
+                <h3>Export Format</h3>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="multi-format-long" name="multi-csv-format" value="long" checked>
+                        <label for="multi-format-long">Long Format (one row per metric)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="multi-format-wide" name="multi-csv-format" value="wide">
+                        <label for="multi-format-wide">Wide Format (one row per day, metrics as columns)</label>
                     </div>
                 </div>
             </div>
@@ -757,6 +787,7 @@
             metricsDisplay.innerHTML = ""; // Clear previous metrics
             destroyCharts(); // Destroy old charts before creating new ones
             exportCsvButton.classList.add("hidden");
+            document.getElementById("csv-format-selection").classList.add("hidden");
             currentMetricsData = null;
 
             if (!userId) {
@@ -836,6 +867,7 @@
                         displayAggregatedMetrics(allMetricsData, dateRange);
                     }
                     exportCsvButton.classList.remove("hidden");
+                    document.getElementById("csv-format-selection").classList.remove("hidden");
                 } else {
                     metricsDisplay.innerHTML = `<p>No metric data available for the selected user and date(s).</p>`;
                 }
@@ -1335,7 +1367,26 @@
             const selectedUserId = userSelect.value;
             const selectedUserText = userSelect.options[userSelect.selectedIndex].text;
             const userEmail = selectedUserText.split(' (ID:')[0]; // Extract email from "email (ID: X)" format
+            
+            // Check selected format
+            const formatSelection = document.querySelector('input[name="single-csv-format"]:checked');
+            const exportFormat = formatSelection ? formatSelection.value : 'long';
+            
+            // Add userEmail to metrics data for wide format
+            const metricsWithUser = currentMetricsData.map(metric => ({
+                ...metric,
+                userEmail: userEmail
+            }));
+            
+            if (exportFormat === 'wide') {
+                // Use wide format export
+                const startDate = singleDateMode.checked ? dateSelect.value : startDateSelect.value;
+                const endDate = singleDateMode.checked ? dateSelect.value : endDateSelect.value;
+                exportWideFormatCSV(metricsWithUser, startDate, endDate, 'ultrahuman_data');
+                return;
+            }
 
+            // Continue with existing long format logic
             // Prepare CSV data
             const csvRows = [];
             const headers = ["User Email", "Date", "Metric Type", "Value", "Unit", "Details"];
@@ -1871,6 +1922,131 @@
             document.getElementById('multi-end-date').value = today;
         }
         
+        // --- Wide Format Export Functions ---
+        /**
+         * Export data in wide format where each row represents one user-date combination
+         * @param {Array} metricsData - Array of metric data with userEmail and date properties
+         * @param {string} startDate - Start date for filename
+         * @param {string} endDate - End date for filename  
+         * @param {string} filePrefix - Prefix for filename (e.g., 'ultrahuman_data' or 'ultrahuman_multi_user_data')
+         */
+        function exportWideFormatCSV(metricsData, startDate, endDate, filePrefix = 'ultrahuman_data') {
+            // Group data by user email and date
+            const groupedData = {};
+            
+            metricsData.forEach(metric => {
+                const userEmail = metric.userEmail || "N/A";
+                const date = metric.date || "N/A";
+                const key = `${userEmail}|${date}`;
+                
+                if (!groupedData[key]) {
+                    groupedData[key] = {
+                        userEmail: userEmail,
+                        date: date,
+                        metrics: {}
+                    };
+                }
+                
+                // Process different metric types
+                if (metric.type === "sleep" || metric.type === "Sleep") {
+                    const hasFullSleepData = safeGet(metric, 'object.bedtime_start') && safeGet(metric, 'object.bedtime_end');
+                    
+                    if (hasFullSleepData) {
+                        const bedtimeStart = new Date(safeGet(metric, 'object.bedtime_start') * 1000);
+                        const bedtimeEnd = new Date(safeGet(metric, 'object.bedtime_end') * 1000);
+                        const duration = (safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start')) / 3600;
+                        
+                        groupedData[key].metrics['Bedtime'] = bedtimeStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                        groupedData[key].metrics['Wake_Time'] = bedtimeEnd.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                        groupedData[key].metrics['Sleep_Duration_Hours'] = duration.toFixed(1);
+                        
+                        // Sleep Heart Rate
+                        if (safeGet(metric, 'object.hr_graph.gist_object.avg')) {
+                            groupedData[key].metrics['Sleep_HR_Avg_BPM'] = safeGet(metric, 'object.hr_graph.gist_object.avg');
+                            groupedData[key].metrics['Sleep_HR_Min_BPM'] = safeGet(metric, 'object.hr_graph.gist_object.min', 'N/A');
+                            groupedData[key].metrics['Sleep_HR_Max_BPM'] = safeGet(metric, 'object.hr_graph.gist_object.max', 'N/A');
+                        }
+                        
+                        // Sleep HRV
+                        if (safeGet(metric, 'object.hrv_graph.gist_object.avg')) {
+                            groupedData[key].metrics['Sleep_HRV_Avg_MS'] = safeGet(metric, 'object.hrv_graph.gist_object.avg');
+                            groupedData[key].metrics['Sleep_HRV_Min_MS'] = safeGet(metric, 'object.hrv_graph.gist_object.min', 'N/A');
+                            groupedData[key].metrics['Sleep_HRV_Max_MS'] = safeGet(metric, 'object.hrv_graph.gist_object.max', 'N/A');
+                        }
+                    }
+                } else {
+                    // Handle other metric types
+                    const metricName = metric.type || 'Unknown';
+                    let value = safeGet(metric, 'object.value', 'N/A');
+                    const unit = safeGet(metric, 'object.unit', '');
+                    
+                    // Create column name with unit
+                    let columnName = metricName.replace(/[^a-zA-Z0-9]/g, '_'); // Replace non-alphanumeric with underscore
+                    if (unit && unit !== '') {
+                        columnName += `_${unit.toUpperCase()}`;
+                    }
+                    
+                    groupedData[key].metrics[columnName] = value;
+                }
+            });
+            
+            // Collect all possible metric columns
+            const allColumns = new Set(['User_Email', 'Date']);
+            Object.values(groupedData).forEach(row => {
+                Object.keys(row.metrics).forEach(col => allColumns.add(col));
+            });
+            
+            // Convert to sorted array for consistent column order
+            const sortedColumns = Array.from(allColumns).sort((a, b) => {
+                // Keep User_Email and Date first
+                if (a === 'User_Email') return -1;
+                if (b === 'User_Email') return 1;
+                if (a === 'Date') return -1;
+                if (b === 'Date') return 1;
+                
+                // Sort sleep metrics first, then others alphabetically
+                const sleepMetrics = ['Bedtime', 'Wake_Time', 'Sleep_Duration_Hours', 'Sleep_HR_Avg_BPM', 'Sleep_HR_Min_BPM', 'Sleep_HR_Max_BPM', 'Sleep_HRV_Avg_MS', 'Sleep_HRV_Min_MS', 'Sleep_HRV_Max_MS'];
+                const aIsSleep = sleepMetrics.includes(a);
+                const bIsSleep = sleepMetrics.includes(b);
+                
+                if (aIsSleep && !bIsSleep) return -1;
+                if (!aIsSleep && bIsSleep) return 1;
+                if (aIsSleep && bIsSleep) {
+                    return sleepMetrics.indexOf(a) - sleepMetrics.indexOf(b);
+                }
+                
+                return a.localeCompare(b);
+            });
+            
+            // Create CSV content
+            const csvRows = [];
+            csvRows.push(sortedColumns.join(','));
+            
+            // Add data rows
+            Object.values(groupedData).forEach(row => {
+                const csvRow = sortedColumns.map(col => {
+                    if (col === 'User_Email') return `"${row.userEmail}"`;
+                    if (col === 'Date') return row.date;
+                    return row.metrics[col] || 'N/A';
+                });
+                csvRows.push(csvRow.join(','));
+            });
+            
+            // Create and download CSV
+            const csvContent = csvRows.join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            
+            const downloadLink = document.createElement("a");
+            downloadLink.href = url;
+            const dateStr = startDate === endDate ? startDate : `${startDate}_to_${endDate}`;
+            downloadLink.download = `${filePrefix}_wide_format_${dateStr}.csv`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(url);
+        }
+        
         function exportMultiUserCSV(allUsersData, startDate, endDate) {
             const csvRows = [];
             const headers = ["User Email", "Date", "Metric Type", "Value", "Unit", "Details"];
@@ -2099,8 +2275,16 @@
                         throw new Error('No data found for the selected users and date range.');
                     }
                     
-                    // Export to CSV
-                    exportMultiUserCSV(allUsersData, startDate, endDate);
+                    // Check selected format
+                    const formatSelection = document.querySelector('input[name="multi-csv-format"]:checked');
+                    const exportFormat = formatSelection ? formatSelection.value : 'long';
+                    
+                    // Export to CSV based on selected format
+                    if (exportFormat === 'wide') {
+                        exportWideFormatCSV(allUsersData, startDate, endDate, 'ultrahuman_multi_user_data');
+                    } else {
+                        exportMultiUserCSV(allUsersData, startDate, endDate);
+                    }
                     
                     successDiv.textContent = `Successfully exported data for ${selectedUsers.length} user(s) from ${startDate} to ${endDate}.`;
                     successDiv.style.display = 'block';
@@ -2148,8 +2332,51 @@
             console.log('=== End Testing ===\\n');
         }
         
+        // Test wide format export with sample data
+        function testWideFormatExport() {
+            console.log('=== Testing Wide Format Export ===');
+            
+            const sampleData = [
+                {
+                    userEmail: 'test@example.com',
+                    date: '2024-01-15',
+                    type: 'sleep',
+                    object: {
+                        bedtime_start: 1705357800, // 11:30 PM
+                        bedtime_end: 1705386600,   // 7:30 AM
+                        hr_graph: { gist_object: { avg: 65, min: 55, max: 75 } },
+                        hrv_graph: { gist_object: { avg: 45, min: 35, max: 55 } }
+                    }
+                },
+                {
+                    userEmail: 'test@example.com',
+                    date: '2024-01-15',
+                    type: 'steps',
+                    object: { value: 8500, unit: 'steps' }
+                },
+                {
+                    userEmail: 'test@example.com', 
+                    date: '2024-01-16',
+                    type: 'sleep',
+                    object: {
+                        bedtime_start: 1705444200, // 11:30 PM next day
+                        bedtime_end: 1705473000,   // 7:30 AM next day
+                        hr_graph: { gist_object: { avg: 68, min: 58, max: 78 } }
+                    }
+                }
+            ];
+            
+            console.log('Sample data prepared with', sampleData.length, 'metrics');
+            console.log('This would create 2 rows (one per date) with columns for all metrics');
+            console.log('Expected columns: User_Email, Date, Bedtime, Wake_Time, Sleep_Duration_Hours, Sleep_HR_Avg_BPM, Sleep_HR_Min_BPM, Sleep_HR_Max_BPM, Sleep_HRV_Avg_MS, Sleep_HRV_Min_MS, Sleep_HRV_Max_MS, STEPS_STEPS');
+            
+            // To actually test (uncomment next line):
+            // exportWideFormatCSV(sampleData, '2024-01-15', '2024-01-16', 'test_wide_format');
+        }
+        
         // Uncomment the line below to run tests in browser console
         // testCircularMean();
+        // testWideFormatExport();
 
     </script>
 </body>
