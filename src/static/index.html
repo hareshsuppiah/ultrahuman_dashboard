@@ -741,7 +741,7 @@
                     return;
                 }
                 
-                let content = `<h3>${metric.object.title || metric.type.replace("_", " ").toUpperCase()}</h3>`;
+                let content = `<h3>${safeGet(metric, 'object.title') || metric.type.replace("_", " ").toUpperCase()}</h3>`;
                 let canvasId = `chart-${metric.type}-${Date.now()}`;
 
                 // --- Specific Metric Handling ---
@@ -750,12 +750,12 @@
                     case "Sleep":
                         // Check if we have any sleep data at all
                         const hasAnyData = Object.keys(metric.object).length > 0;
-                        const hasFullSleepData = metric.object.bedtime_start && metric.object.bedtime_end;
+                        const hasFullSleepData = safeGet(metric, 'object.bedtime_start') && safeGet(metric, 'object.bedtime_end');
                         
                         if (hasFullSleepData) {
-                            const bedtimeStart = new Date(metric.object.bedtime_start * 1000);
-                            const bedtimeEnd = new Date(metric.object.bedtime_end * 1000);
-                            const duration = (metric.object.bedtime_end - metric.object.bedtime_start) / 3600;
+                            const bedtimeStart = new Date(safeGet(metric, 'object.bedtime_start') * 1000);
+                            const bedtimeEnd = new Date(safeGet(metric, 'object.bedtime_end') * 1000);
+                            const duration = (safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start')) / 3600;
                             
                             // Instead of adding to current card, create multiple cards
                             card.innerHTML = content; // Finish the title card
@@ -792,8 +792,8 @@
                             metricsDisplay.appendChild(durationCard);
                             
                             // 4. Sleep Heart Rate Card
-                            if (metric.object.hr_graph && metric.object.hr_graph.gist_object) {
-                                const hrGist = metric.object.hr_graph.gist_object;
+                            if (safeGet(metric, 'object.hr_graph') && safeGet(metric, 'object.hr_graph.gist_object')) {
+                                const hrGist = safeGet(metric, 'object.hr_graph.gist_object');
                                 const hrCard = document.createElement("div");
                                 hrCard.className = "metric-card";
                                 const hrCanvasId = `hr-sleep-${Date.now()}`;
@@ -807,8 +807,8 @@
                                 metricsDisplay.appendChild(hrCard);
                                 
                                 // Add HR chart
-                                if (metric.object.hr_graph.data && metric.object.hr_graph.data.length > 0) {
-                                    const hrData = metric.object.hr_graph.data;
+                                if (safeGet(metric, 'object.hr_graph.data') && safeGet(metric, 'object.hr_graph.data').length > 0) {
+                                    const hrData = safeGet(metric, 'object.hr_graph.data');
                                     const hrLabels = hrData.map(d => new Date(d.timestamp * 1000));
                                     const hrValues = hrData.map(d => d.value);
                                     setTimeout(() => createLineChart(hrCanvasId, hrLabels, hrValues, "Heart Rate (BPM)"), 0);
@@ -816,8 +816,8 @@
                             }
                             
                             // 5. Sleep HRV Card
-                            if (metric.object.hrv_graph && metric.object.hrv_graph.gist_object) {
-                                const hrvGist = metric.object.hrv_graph.gist_object;
+                            if (safeGet(metric, 'object.hrv_graph') && safeGet(metric, 'object.hrv_graph.gist_object')) {
+                                const hrvGist = safeGet(metric, 'object.hrv_graph.gist_object');
                                 const hrvCard = document.createElement("div");
                                 hrvCard.className = "metric-card";
                                 const hrvCanvasId = `hrv-sleep-${Date.now()}`;
@@ -831,8 +831,8 @@
                                 metricsDisplay.appendChild(hrvCard);
                                 
                                 // Add HRV chart
-                                if (metric.object.hrv_graph.data && metric.object.hrv_graph.data.length > 0) {
-                                    const hrvData = metric.object.hrv_graph.data;
+                                if (safeGet(metric, 'object.hrv_graph.data') && safeGet(metric, 'object.hrv_graph.data').length > 0) {
+                                    const hrvData = safeGet(metric, 'object.hrv_graph.data');
                                     const hrvLabels = hrvData.map(d => new Date(d.timestamp * 1000));
                                     const hrvValues = hrvData.map(d => d.value);
                                     setTimeout(() => createLineChart(hrvCanvasId, hrvLabels, hrvValues, "HRV (ms)"), 0);
@@ -847,8 +847,8 @@
                             content += `<p class="metric-details">No sleep data recorded for this date</p>`;
                         } else {
                             // Fallback for other sleep data formats (score-based, etc.)
-                            content += `<div class="metric-value">${metric.object.score || "N/A"} <span class="metric-unit">Score</span></div>`;
-                            if (metric.object.subtitle) content += `<p class="metric-details">${metric.object.subtitle}</p>`;
+                            content += `<div class="metric-value">${safeGet(metric, 'object.score') || "N/A"} <span class="metric-unit">Score</span></div>`;
+                            if (safeGet(metric, 'object.subtitle')) content += `<p class="metric-details">${safeGet(metric, 'object.subtitle')}</p>`;
                         }
                         break;
                     case "hr":
@@ -856,61 +856,61 @@
                     case "hrv": // HRV average is often a key metric
                     case "night_rhr":
                         // For HR/HRV/Temp data with values array containing timestamp/value objects
-                        if (metric.object.values && metric.object.values.length > 0) {
-                            const displayValue = metric.object.avg || metric.object.last_reading || "N/A";
-                            content += `<div class="metric-value">${displayValue} <span class="metric-unit">${metric.object.unit || (metric.type === "hrv" ? "ms" : "BPM")}</span></div>`;
+                        if (safeGet(metric, 'object.values') && safeGet(metric, 'object.values').length > 0) {
+                            const displayValue = safeGet(metric, 'object.avg') || safeGet(metric, 'object.last_reading') || "N/A";
+                            content += `<div class="metric-value">${displayValue} <span class="metric-unit">${safeGet(metric, 'object.unit') || (metric.type === "hrv" ? "ms" : "BPM")}</span></div>`;
                             
                             // Add subtitle if present
-                            if (metric.object.subtitle) content += `<p class="metric-details">${metric.object.subtitle}</p>`;
-                            if (metric.object.trend_direction && metric.object.trend_title) {
-                                content += `<p class="metric-details">Trend: ${metric.object.trend_title}</p>`;
+                            if (safeGet(metric, 'object.subtitle')) content += `<p class="metric-details">${safeGet(metric, 'object.subtitle')}</p>`;
+                            if (safeGet(metric, 'object.trend_direction') && safeGet(metric, 'object.trend_title')) {
+                                content += `<p class="metric-details">Trend: ${safeGet(metric, 'object.trend_title')}</p>`;
                             }
                             
                             content += `<div class="chart-container"><canvas id="${canvasId}"></canvas></div>`;
                             // Values array contains objects with timestamp and value
-                            const labels = metric.object.values.map(v => new Date(v.timestamp * 1000));
-                            const dataPoints = metric.object.values.map(v => v.value);
-                            setTimeout(() => createLineChart(canvasId, labels, dataPoints, metric.object.title || metric.type), 0);
+                            const labels = safeGet(metric, 'object.values').map(v => new Date(v.timestamp * 1000));
+                            const dataPoints = safeGet(metric, 'object.values').map(v => v.value);
+                            setTimeout(() => createLineChart(canvasId, labels, dataPoints, safeGet(metric, 'object.title') || metric.type), 0);
                         } else {
                             // Fallback for other formats
-                            content += `<div class="metric-value">${metric.object.avg ?? metric.object.last_reading ?? metric.object.value ?? "N/A"} <span class="metric-unit">${metric.object.unit || (metric.type === "hrv" ? "ms" : ".")}</span></div>`;
-                            if (metric.object.subtitle) content += `<p class="metric-details">(${metric.object.subtitle})</p>`;
+                            content += `<div class="metric-value">${safeGet(metric, 'object.avg') ?? safeGet(metric, 'object.last_reading') ?? safeGet(metric, 'object.value') ?? "N/A"} <span class="metric-unit">${safeGet(metric, 'object.unit') || (metric.type === "hrv" ? "ms" : ".")}</span></div>`;
+                            if (safeGet(metric, 'object.subtitle')) content += `<p class="metric-details">(${safeGet(metric, 'object.subtitle')})</p>`;
                         }
                         break;
                     case "steps":
                     case "motion": // Assuming motion index
-                        content += `<div class="metric-value">${metric.object.avg ? metric.object.avg.toFixed(0) : "N/A"} <span class="metric-unit">${metric.type === "steps" ? "Steps" : "Index"}</span></div>`;
-                        if (metric.object.subtitle) content += `<p class="metric-details">(${metric.object.subtitle})</p>`;
+                        content += `<div class="metric-value">${safeGet(metric, 'object.avg') ? safeGet(metric, 'object.avg').toFixed(0) : "N/A"} <span class="metric-unit">${metric.type === "steps" ? "Steps" : "Index"}</span></div>`;
+                        if (safeGet(metric, 'object.subtitle')) content += `<p class="metric-details">(${safeGet(metric, 'object.subtitle')})</p>`;
                         // Could add chart for values over time if useful
                         break;
                     case "recovery": // Recovery Index
                     case "movement": // Movement Index
-                        content += `<div class="metric-value">${metric.object.score ?? "N/A"} <span class="metric-unit">Index</span></div>`;
-                        if (metric.object.state_title) content += `<p class="metric-details">State: ${metric.object.state_title}</p>`;
+                        content += `<div class="metric-value">${safeGet(metric, 'object.score') ?? "N/A"} <span class="metric-unit">Index</span></div>`;
+                        if (safeGet(metric, 'object.state_title')) content += `<p class="metric-details">State: ${safeGet(metric, 'object.state_title')}</p>`;
                         break;
                     case "recovery_index":
-                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">${metric.object.title || "Recovery Index"}</span></div>`;
+                        content += `<div class="metric-value">${safeGet(metric, 'object.value') || "N/A"} <span class="metric-unit">${safeGet(metric, 'object.title') || "Recovery Index"}</span></div>`;
                         break;
                     case "movement_index":
-                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">${metric.object.title || "Movement Index"}</span></div>`;
+                        content += `<div class="metric-value">${safeGet(metric, 'object.value') || "N/A"} <span class="metric-unit">${safeGet(metric, 'object.title') || "Movement Index"}</span></div>`;
                         break;
                     case "avg_sleep_hrv":
-                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">ms</span></div>`;
+                        content += `<div class="metric-value">${safeGet(metric, 'object.value') || "N/A"} <span class="metric-unit">ms</span></div>`;
                         break;
                     case "active_minutes":
-                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">${metric.object.title || "Active Minutes"}</span></div>`;
+                        content += `<div class="metric-value">${safeGet(metric, 'object.value') || "N/A"} <span class="metric-unit">${safeGet(metric, 'object.title') || "Active Minutes"}</span></div>`;
                         break;
                     case "sleep_rhr":
-                        content += `<div class="metric-value">${metric.object.value || "N/A"} <span class="metric-unit">BPM</span></div>`;
+                        content += `<div class="metric-value">${safeGet(metric, 'object.value') || "N/A"} <span class="metric-unit">BPM</span></div>`;
                         break;
                     case "resting_hr":
                         // Handle resting HR with values array
-                        if (metric.object.values && metric.object.values.length > 0) {
-                            content += `<div class="metric-value">${metric.object.last_reading || "N/A"} <span class="metric-unit">${metric.object.unit || "BPM"}</span></div>`;
+                        if (safeGet(metric, 'object.values') && safeGet(metric, 'object.values').length > 0) {
+                            content += `<div class="metric-value">${safeGet(metric, 'object.last_reading') || "N/A"} <span class="metric-unit">${safeGet(metric, 'object.unit') || "BPM"}</span></div>`;
                             content += `<div class="chart-container"><canvas id="${canvasId}"></canvas></div>`;
-                            const dataPoints = metric.object.values;
+                            const dataPoints = safeGet(metric, 'object.values');
                             const labels = dataPoints.map((_, index) => index);
-                            setTimeout(() => createLineChart(canvasId, labels, dataPoints, metric.object.title || "Resting HR"), 0);
+                            setTimeout(() => createLineChart(canvasId, labels, dataPoints, safeGet(metric, 'object.title') || "Resting HR"), 0);
                         } else {
                             content += `<div class="metric-value">N/A <span class="metric-unit">BPM</span></div>`;
                         }
@@ -924,8 +924,8 @@
                     case "time_in_target":
                     case "vo2_max":
                         // Generic display - adjust if sample provides more structure
-                        content += `<div class="metric-value">${metric.object.value ?? metric.object.score ?? metric.object.avg ?? "N/A"} <span class="metric-unit">${metric.object.unit || ""}</span></div>`;
-                        if (metric.object.title) content += `<p class="metric-details">(${metric.object.title})</p>`;
+                        content += `<div class="metric-value">${safeGet(metric, 'object.value') ?? safeGet(metric, 'object.score') ?? safeGet(metric, 'object.avg') ?? "N/A"} <span class="metric-unit">${safeGet(metric, 'object.unit') || ""}</span></div>`;
+                        if (safeGet(metric, 'object.title')) content += `<p class="metric-details">(${safeGet(metric, 'object.title')})</p>`;
                         break;
                     default:
                         content += `<p class="metric-details">Data structure not fully recognized for type: ${metric.type}</p>`;
@@ -973,22 +973,22 @@
                         let waketimes = [];
                         
                         metrics.forEach(m => {
-                            const hasValidSleepData = m.object.bedtime_start && m.object.bedtime_end;
+                            const hasValidSleepData = safeGet(m, 'object.bedtime_start') && safeGet(m, 'object.bedtime_end');
                             if (hasValidSleepData) {
-                                const duration = (m.object.bedtime_end - m.object.bedtime_start) / 3600;
+                                const duration = (safeGet(m, 'object.bedtime_end') - safeGet(m, 'object.bedtime_start')) / 3600;
                                 totalSleepHours += duration;
                                 validSleepCount++;
                                 
                                 // Collect bedtimes and wake times for consistency analysis
-                                const bedtime = new Date(m.object.bedtime_start * 1000);
-                                const waketime = new Date(m.object.bedtime_end * 1000);
+                                const bedtime = new Date(safeGet(m, 'object.bedtime_start') * 1000);
+                                const waketime = new Date(safeGet(m, 'object.bedtime_end') * 1000);
                                 bedtimes.push(bedtime.getHours() + bedtime.getMinutes() / 60);
                                 waketimes.push(waketime.getHours() + waketime.getMinutes() / 60);
                             }
                             
                             // Handle HR data from multiple possible locations
                             const hrFromGraph = safeGet(m.object, 'hr_graph.gist_object.avg');
-                            const hrFromQuickMetrics = m.object.quick_metrics?.find(
+                            const hrFromQuickMetrics = safeGet(m, 'object.quick_metrics')?.find(
                                 metric => metric.type === 'avg_hr'
                             )?.value;
                             const hrValue = hrFromGraph || hrFromQuickMetrics;
@@ -1000,7 +1000,7 @@
                             
                             // Handle HRV data from multiple possible locations
                             const hrvFromGraph = safeGet(m.object, 'hrv_graph.gist_object.avg');
-                            const hrvFromQuickMetrics = m.object.quick_metrics?.find(
+                            const hrvFromQuickMetrics = safeGet(m, 'object.quick_metrics')?.find(
                                 metric => metric.type === 'avg_hrv'
                             )?.value;
                             const hrvValue = hrvFromGraph || hrvFromQuickMetrics;
@@ -1118,32 +1118,38 @@
                         }
                         break;
                     case "steps":
-                        const totalSteps = metrics.reduce((sum, m) => sum + (m.object.avg || m.object.value || 0), 0);
-                        const avgSteps = totalSteps / metrics.length;
+                        const validStepsMetrics = metrics.filter(m => m && m.object);
+                        const totalSteps = validStepsMetrics.reduce((sum, m) => {
+                            return sum + (safeGet(m, 'object.avg') || safeGet(m, 'object.value') || safeGet(m, 'object.total') || 0);
+                        }, 0);
+                        const avgSteps = totalSteps / (validStepsMetrics.length || 1);
                         content += `<div class="metric-value">${totalSteps.toFixed(0)} <span class="metric-unit">Total Steps</span></div>`;
                         content += `<p class="metric-details">Daily Average: ${avgSteps.toFixed(0)} steps</p>`;
                         break;
                     case "avg_sleep_hrv":
-                        const avgSleepHrv = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0) / metrics.length;
+                        const validHrvMetrics = metrics.filter(m => m && m.object);
+                        const avgSleepHrv = validHrvMetrics.reduce((sum, m) => {
+                            return sum + (safeGet(m, 'object.value') || safeGet(m, 'object.avg') || 0);
+                        }, 0) / (validHrvMetrics.length || 1);
                         content += `<div class="metric-value">${avgSleepHrv.toFixed(0)} <span class="metric-unit">ms (Avg)</span></div>`;
                         break;
                     case "recovery_index":
                     case "movement_index":
-                        const avgIndex = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0) / metrics.length;
+                        const avgIndex = metrics.reduce((sum, m) => sum + (safeGet(m, 'object.value') || 0), 0) / metrics.length;
                         content += `<div class="metric-value">${avgIndex.toFixed(0)} <span class="metric-unit">Index (Avg)</span></div>`;
                         break;
                     case "active_minutes":
-                        const totalMinutes = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0);
+                        const totalMinutes = metrics.reduce((sum, m) => sum + (safeGet(m, 'object.value') || 0), 0);
                         const avgMinutes = totalMinutes / metrics.length;
                         content += `<div class="metric-value">${totalMinutes} <span class="metric-unit">Total Minutes</span></div>`;
                         content += `<p class="metric-details">Daily Average: ${avgMinutes.toFixed(0)} minutes</p>`;
                         break;
                     case "sleep_rhr":
-                        const avgSleepRhr = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0) / metrics.length;
+                        const avgSleepRhr = metrics.reduce((sum, m) => sum + (safeGet(m, 'object.value') || 0), 0) / metrics.length;
                         content += `<div class="metric-value">${avgSleepRhr.toFixed(0)} <span class="metric-unit">BPM (Avg)</span></div>`;
                         break;
                     case "vo2_max":
-                        const avgVo2 = metrics.reduce((sum, m) => sum + (m.object.value || 0), 0) / metrics.length;
+                        const avgVo2 = metrics.reduce((sum, m) => sum + (safeGet(m, 'object.value') || 0), 0) / metrics.length;
                         content += `<div class="metric-value">${avgVo2.toFixed(0)} <span class="metric-unit">ml/kg/min (Avg)</span></div>`;
                         break;
                     case "glucose":
@@ -1152,7 +1158,7 @@
                     case "average_glucose":
                     case "hba1c":
                     case "time_in_target":
-                        const glucoseValues = metrics.map(m => m.object.value || 0).filter(v => v > 0);
+                        const glucoseValues = metrics.map(m => safeGet(m, 'object.value') || 0).filter(v => v > 0);
                         if (glucoseValues.length > 0) {
                             const avgVal = glucoseValues.reduce((sum, v) => sum + v, 0) / glucoseValues.length;
                             const unitStr = metricType.includes("score") ? "Score" : metricType.includes("variability") || metricType.includes("target") ? "%" : "mg/dL";
@@ -1163,7 +1169,7 @@
                         break;
                     default:
                         // For unrecognized types, try to show value if available
-                        const genericValues = metrics.map(m => m.object.value || 0).filter(v => v > 0);
+                        const genericValues = metrics.map(m => safeGet(m, 'object.value') || 0).filter(v => v > 0);
                         if (genericValues.length > 0) {
                             const avg = genericValues.reduce((sum, v) => sum + v, 0) / genericValues.length;
                             content += `<div class="metric-value">${avg.toFixed(1)} <span class="metric-unit">(Avg)</span></div>`;
@@ -1212,12 +1218,12 @@
                 // Handle sleep metrics by creating multiple CSV rows for each sleep component
                 if (metric.type === "sleep" || metric.type === "Sleep") {
                     const hasAnyData = Object.keys(metric.object).length > 0;
-                    const hasFullSleepData = metric.object.bedtime_start && metric.object.bedtime_end;
+                    const hasFullSleepData = safeGet(metric, 'object.bedtime_start') && safeGet(metric, 'object.bedtime_end');
                     
                     if (hasFullSleepData) {
-                        const bedtimeStart = new Date(metric.object.bedtime_start * 1000);
-                        const bedtimeEnd = new Date(metric.object.bedtime_end * 1000);
-                        const duration = (metric.object.bedtime_end - metric.object.bedtime_start) / 3600;
+                        const bedtimeStart = new Date(safeGet(metric, 'object.bedtime_start') * 1000);
+                        const bedtimeEnd = new Date(safeGet(metric, 'object.bedtime_end') * 1000);
+                        const duration = (safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start')) / 3600;
                         
                         // Bedtime
                         csvRows.push([
@@ -1250,8 +1256,8 @@
                         ].join(","));
                         
                         // Sleep heart rate metrics
-                        if (metric.object.hr_graph && metric.object.hr_graph.gist_object) {
-                            const hrGist = metric.object.hr_graph.gist_object;
+                        if (safeGet(metric, 'object.hr_graph') && safeGet(metric, 'object.hr_graph.gist_object')) {
+                            const hrGist = safeGet(metric, 'object.hr_graph.gist_object');
                             csvRows.push([
                                 userEmail,
                                 date,
@@ -1274,8 +1280,8 @@
                         }
                         
                         // Sleep HRV metrics
-                        if (metric.object.hrv_graph && metric.object.hrv_graph.gist_object) {
-                            const hrvGist = metric.object.hrv_graph.gist_object;
+                        if (safeGet(metric, 'object.hrv_graph') && safeGet(metric, 'object.hrv_graph.gist_object')) {
+                            const hrvGist = safeGet(metric, 'object.hrv_graph.gist_object');
                             csvRows.push([
                                 userEmail,
                                 date,
@@ -1312,9 +1318,9 @@
                             userEmail,
                             date,
                             type,
-                            metric.object.score || metric.object.value || "N/A",
+                            safeGet(metric, 'object.score') || safeGet(metric, 'object.value') || "N/A",
                             "Score",
-                            metric.object.subtitle || ""
+                            safeGet(metric, 'object.subtitle') || ""
                         ].join(","));
                     }
                 } else {
@@ -1326,112 +1332,113 @@
                     switch (metric.type) {
                     case "hr":
                     case "heart_rate":
-                        value = metric.object.avg || metric.object.last_reading || metric.object.value || "N/A";
-                        unit = metric.object.unit || "BPM";
-                        details = metric.object.subtitle || metric.object.title || "";
+                        value = safeGet(metric, 'object.avg') || safeGet(metric, 'object.last_reading') || safeGet(metric, 'object.value') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "BPM";
+                        details = safeGet(metric, 'object.subtitle') || safeGet(metric, 'object.title') || "";
                         break;
                     case "temp":
                     case "temperature":
-                        value = metric.object.avg || metric.object.last_reading || metric.object.value || "N/A";
-                        unit = metric.object.unit || "°C";
-                        details = metric.object.subtitle || metric.object.title || "";
+                        value = safeGet(metric, 'object.avg') || safeGet(metric, 'object.last_reading') || safeGet(metric, 'object.value') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "°C";
+                        details = safeGet(metric, 'object.subtitle') || safeGet(metric, 'object.title') || "";
                         break;
                     case "hrv":
                     case "heart_rate_variability":
-                        value = metric.object.avg || metric.object.last_reading || metric.object.value || "N/A";
-                        unit = metric.object.unit || "ms";
-                        details = metric.object.subtitle || metric.object.title || "";
+                        value = safeGet(metric, 'object.avg') || safeGet(metric, 'object.last_reading') || safeGet(metric, 'object.value') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "ms";
+                        details = safeGet(metric, 'object.subtitle') || safeGet(metric, 'object.title') || "";
                         break;
                     case "night_rhr":
                     case "resting_heart_rate":
-                        value = metric.object.avg || metric.object.last_reading || metric.object.value || "N/A";
-                        unit = metric.object.unit || "BPM";
-                        details = metric.object.subtitle || metric.object.title || "Sleep Time Average";
+                        value = safeGet(metric, 'object.avg') || safeGet(metric, 'object.last_reading') || safeGet(metric, 'object.value') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "BPM";
+                        details = safeGet(metric, 'object.subtitle') || safeGet(metric, 'object.title') || "Sleep Time Average";
                         break;
                     case "avg_sleep_hrv":
-                        value = metric.object.avg || metric.object.value || "N/A";
-                        unit = metric.object.unit || "ms";
+                        value = safeGet(metric, 'object.avg') || safeGet(metric, 'object.value') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "ms";
                         details = "Average Sleep HRV";
                         break;
                     case "steps":
-                        value = metric.object.avg || metric.object.total || metric.object.value || "N/A";
+                        value = safeGet(metric, 'object.avg') || safeGet(metric, 'object.total') || safeGet(metric, 'object.value') || "N/A";
                         unit = "Steps";
-                        details = metric.object.subtitle || metric.object.title || "";
+                        details = safeGet(metric, 'object.subtitle') || safeGet(metric, 'object.title') || "";
                         break;
                     case "glucose":
                         // Handle glucose with values array or direct value
-                        if (metric.object.values && metric.object.values.length > 0) {
+                        if (safeGet(metric, 'object.values') && safeGet(metric, 'object.values').length > 0) {
                             // Calculate average from values array
-                            const avgGlucose = metric.object.values.reduce((sum, v) => sum + (v.value || v), 0) / metric.object.values.length;
+                            const values = safeGet(metric, 'object.values');
+                            const avgGlucose = values.reduce((sum, v) => sum + (v.value || v || 0), 0) / values.length;
                             value = avgGlucose.toFixed(1);
                         } else {
-                            value = metric.object.avg || metric.object.value || metric.object.last_reading || "N/A";
+                            value = safeGet(metric, 'object.avg') || safeGet(metric, 'object.value') || safeGet(metric, 'object.last_reading') || "N/A";
                         }
-                        unit = metric.object.unit || "mg/dL";
-                        details = metric.object.title || "Glucose";
+                        unit = safeGet(metric, 'object.unit') || "mg/dL";
+                        details = safeGet(metric, 'object.title') || "Glucose";
                         break;
                     case "metabolic_score":
-                        value = metric.object.score || metric.object.value || "N/A";
-                        unit = metric.object.unit || "Score";
+                        value = safeGet(metric, 'object.score') || safeGet(metric, 'object.value') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "Score";
                         details = "Metabolic Score";
                         break;
                     case "glucose_variability":
-                        value = metric.object.percentage || metric.object.value || "N/A";
-                        unit = metric.object.unit || "%";
+                        value = safeGet(metric, 'object.percentage') || safeGet(metric, 'object.value') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "%";
                         details = "Glucose Variability";
                         break;
                     case "average_glucose":
-                        value = metric.object.avg || metric.object.value || "N/A";
-                        unit = metric.object.unit || "mg/dL";
+                        value = safeGet(metric, 'object.avg') || safeGet(metric, 'object.value') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "mg/dL";
                         details = "Average Glucose";
                         break;
                     case "hba1c":
-                        value = metric.object.value || metric.object.percentage || "N/A";
-                        unit = metric.object.unit || "%";
+                        value = safeGet(metric, 'object.value') || safeGet(metric, 'object.percentage') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "%";
                         details = "HbA1c";
                         break;
                     case "time_in_target":
-                        value = metric.object.percentage || metric.object.value || "N/A";
-                        unit = metric.object.unit || "%";
+                        value = safeGet(metric, 'object.percentage') || safeGet(metric, 'object.value') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "%";
                         details = "Time in Target";
                         break;
                     case "recovery_index":
-                        value = metric.object.value || metric.object.score || metric.object.index || "N/A";
-                        unit = metric.object.unit || "Index";
-                        details = metric.object.title || "Recovery Index";
+                        value = safeGet(metric, 'object.value') || safeGet(metric, 'object.score') || safeGet(metric, 'object.index') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "Index";
+                        details = safeGet(metric, 'object.title') || "Recovery Index";
                         break;
                     case "movement_index":
-                        value = metric.object.value || metric.object.score || metric.object.index || "N/A";
-                        unit = metric.object.unit || "Index";
-                        details = metric.object.title || "Movement Index";
+                        value = safeGet(metric, 'object.value') || safeGet(metric, 'object.score') || safeGet(metric, 'object.index') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "Index";
+                        details = safeGet(metric, 'object.title') || "Movement Index";
                         break;
                     case "active_minutes":
-                        value = metric.object.value || metric.object.total || "N/A";
-                        unit = metric.object.unit || "Minutes";
-                        details = metric.object.title || "Active Minutes";
+                        value = safeGet(metric, 'object.value') || safeGet(metric, 'object.total') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "Minutes";
+                        details = safeGet(metric, 'object.title') || "Active Minutes";
                         break;
                     case "vo2_max":
-                        value = metric.object.value || metric.object.score || "N/A";
-                        unit = metric.object.unit || "ml/kg/min";
+                        value = safeGet(metric, 'object.value') || safeGet(metric, 'object.score') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "ml/kg/min";
                         details = "VO2 Max";
                         break;
                     case "sleep_rhr":
-                        value = metric.object.value || metric.object.avg || "N/A";
-                        unit = metric.object.unit || "BPM";
+                        value = safeGet(metric, 'object.value') || safeGet(metric, 'object.avg') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "BPM";
                         details = "Sleep Resting Heart Rate";
                         break;
                     case "avg_sleep_hrv":
-                        value = metric.object.value || "N/A";
+                        value = safeGet(metric, 'object.value') || "N/A";
                         unit = "ms";
                         details = "Average Sleep HRV";
                         break;
                     default:
                         // Generic fallback for unknown metric types
-                        value = metric.object.value || metric.object.score || metric.object.avg || 
-                               metric.object.total || metric.object.percentage || metric.object.index || 
-                               metric.object.last_reading || "N/A";
-                        unit = metric.object.unit || "";
-                        details = metric.object.title || metric.object.subtitle || metric.object.description || "";
+                        value = safeGet(metric, 'object.value') || safeGet(metric, 'object.score') || safeGet(metric, 'object.avg') || 
+                               safeGet(metric, 'object.total') || safeGet(metric, 'object.percentage') || safeGet(metric, 'object.index') || 
+                               safeGet(metric, 'object.last_reading') || "N/A";
+                        unit = safeGet(metric, 'object.unit') || "";
+                        details = safeGet(metric, 'object.title') || safeGet(metric, 'object.subtitle') || safeGet(metric, 'object.description') || "";
                     }
 
                     // Add CSV row for non-sleep metrics
