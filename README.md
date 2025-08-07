@@ -4,8 +4,6 @@ A comprehensive Python web dashboard for visualizing and analyzing your Ultrahum
 
 ![Ultrahuman Dashboard Screenshot](assets/images/dashboard-screenshot.png)
 
-*Screenshot showing the dashboard with Heart Rate, Skin Temperature, and HRV metrics displayed in interactive charts*
-
 ---
 
 ## What This Project Does
