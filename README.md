@@ -2,6 +2,10 @@
 
 A comprehensive Python web dashboard for visualizing and analyzing your Ultrahuman ring data locally. Get detailed insights into your sleep, heart rate, HRV, glucose levels, and more!
 
+![Ultrahuman Dashboard Screenshot](assets/images/dashboard-screenshot.png)
+
+*Screenshot showing the dashboard with Heart Rate, Skin Temperature, and HRV metrics displayed in interactive charts*
+
 ---
 
 ## What This Project Does
@@ -9,11 +13,19 @@ A comprehensive Python web dashboard for visualizing and analyzing your Ultrahum
 This dashboard provides:
 - **Comprehensive Health Analytics**: Sleep patterns, heart rate, HRV, glucose monitoring, and more
 - **Advanced Sleep Tracking**: Separate cards for bedtime, wake time, duration, sleep HR, and sleep HRV
-- **Interactive Charts**: Real-time visualizations of your health metrics
-- **Detailed CSV Exports**: Export all your data with individual sleep metrics as separate rows
+- **Interactive Charts**: Real-time visualizations of your health metrics with zoom and pan capabilities
+- **Tabbed Interface**: Clean navigation between User Management, Single User Dashboard, and Multi-User Export
+- **Dual Export Formats**: Choose between Long Format (detailed) or Wide Format (spreadsheet-friendly)
 - **Multi-User Export**: Bulk CSV export for multiple users across date ranges
 - **Multi-Day Analysis**: Compare trends across date ranges
 - **Privacy-First**: All data stays local on your machine
+
+### Key Features Shown in Dashboard:
+- **Heart Rate Monitoring**: Real-time BPM tracking with interactive charts
+- **Skin Temperature**: Continuous temperature monitoring throughout the day  
+- **HRV Analysis**: Heart Rate Variability metrics with trend analysis
+- **Export Options**: Both Long and Wide format CSV exports available
+- **Date Selection**: Single day or date range analysis modes
 
 ---
 
