@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Ultrahuman Dashboard - Personal Health Data Visualization Tool"
+version: "1.0.0"
+date-released: "2024-08-08"
+url: "https://github.com/hareshsuppiah/ultrahuman_dashboard"
+repository-code: "https://github.com/hareshsuppiah/ultrahuman_dashboard"
+authors:
+  - family-names: "[Your Last Name]"
+    given-names: "[Your First Name]"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # Uncomment and add your ORCID if available
+abstract: |
+  A comprehensive Python web dashboard for visualizing and analyzing Ultrahuman ring data locally. 
+  This open-source tool provides users with detailed insights into their sleep patterns, heart rate, 
+  HRV (Heart Rate Variability), glucose levels, and other health metrics through an intuitive web 
+  interface. Key features include comprehensive health analytics, interactive charts, advanced sleep 
+  analysis using circular mean algorithms, dual CSV export formats, multi-user bulk export 
+  functionality, and privacy-first architecture ensuring all data remains local on the user's machine.
+keywords:
+  - health data visualization
+  - sleep analysis
+  - heart rate variability
+  - personal health monitoring
+  - Ultrahuman ring
+  - Python dashboard
+  - health informatics
+  - wearable device data
+  - privacy-preserving health analytics
+  - biomedical data visualization
+license: MIT
+programming-languages:
+  - Python
+  - JavaScript
+  - HTML
+  - CSS

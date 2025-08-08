@@ -486,3 +486,28 @@ This project is designed for personal use with Ultrahuman ring data. If you enco
 ## License
 
 This project is for personal use with Ultrahuman ring data. Keep your API credentials secure and never share them publicly.
+
+---
+
+## How to Cite
+
+If you use this dashboard in your research or find it helpful, please consider citing it:
+
+### APA Style
+```
+[Your Name]. (2024). Ultrahuman Dashboard - Personal Health Data Visualization Tool (Version 1.0.0) [Computer software]. https://github.com/hareshsuppiah/ultrahuman_dashboard
+```
+
+### BibTeX
+```bibtex
+@software{ultrahuman_dashboard_2024,
+  author = {[Your Name]},
+  title = {Ultrahuman Dashboard - Personal Health Data Visualization Tool},
+  url = {https://github.com/hareshsuppiah/ultrahuman_dashboard},
+  version = {1.0.0},
+  year = {2024}
+}
+```
+
+### Citation File
+This repository includes a `CITATION.cff` file for easy citation management. GitHub will automatically generate citation formats from this file.
