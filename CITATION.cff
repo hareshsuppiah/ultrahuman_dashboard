@@ -7,9 +7,12 @@ date-released: "2024-08-08"
 url: "https://github.com/hareshsuppiah/ultrahuman_dashboard"
 repository-code: "https://github.com/hareshsuppiah/ultrahuman_dashboard"
 authors:
-  - family-names: "[Your Last Name]"
-    given-names: "[Your First Name]"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"  # Uncomment and add your ORCID if available
+  - family-names: "Suppiah"
+    given-names: "Haresh"
+    orcid: "https://orcid.org/0000-0001-9828-2349"
+  - family-names: "Driller"
+    given-names: "Matthew"
+    orcid: "https://orcid.org/0000-0002-9990-8830"
 abstract: |
   A comprehensive Python web dashboard for visualizing and analyzing Ultrahuman ring data locally. 
   This open-source tool provides users with detailed insights into their sleep patterns, heart rate, 
