@@ -1,6 +1,6 @@
 # Ultrahuman Dashboard
 
-A comprehensive Python web dashboard for visualizing and analyzing your Ultrahuman ring data locally. Get detailed insights into your sleep, heart rate, HRV, glucose levels, and more!
+A comprehensive Python web dashboard for visualising and analysing your Ultrahuman ring data locally. Get detailed insights into your sleep, heart rate, HRV, glucose levels, and more!
 
 ![Ultrahuman Dashboard Screenshot](assets/images/dashboard-screenshot.png)
 
@@ -12,18 +12,18 @@ If you use this dashboard in your research or find it helpful, please cite it us
 
 ### APA Style
 ```
-Suppiah, H., & Driller, M. (2024). Ultrahuman Dashboard - Personal Health Data Visualization Tool (Version 1.0.0) [Computer software]. https://doi.org/[DOI_PLACEHOLDER]
+Suppiah, H., & Driller, M. (2025). Ultrahuman Ring Health Monitoring Dashboard and Analysis Tool (Version 1.0.0) [Computer software]. https://doi.org/10.5281/zenodo.16777849
 ```
 
 ### BibTeX
 ```bibtex
-@software{suppiah_ultrahuman_2024,
+@software{suppiah_ultrahuman_2025,
   author = {Suppiah, Haresh and Driller, Matthew},
-  title = {Ultrahuman Dashboard - Personal Health Data Visualization Tool},
+  title = {Ultrahuman Ring Health Monitoring Dashboard and Analysis Tool},
   url = {https://github.com/hareshsuppiah/ultrahuman_dashboard},
-  doi = {[DOI_PLACEHOLDER]},
+  doi = {10.5281/zenodo.16777849},
   version = {1.0.0},
-  year = {2024}
+  year = {2025}
 }
 ```
 
@@ -37,7 +37,7 @@ This repository includes a `CITATION.cff` file for easy citation management. Git
 This dashboard provides:
 - **Comprehensive Health Analytics**: Sleep patterns, heart rate, HRV, glucose monitoring, and more
 - **Advanced Sleep Tracking**: Separate cards for bedtime, wake time, duration, sleep HR, and sleep HRV
-- **Interactive Charts**: Real-time visualizations of your health metrics with zoom and pan capabilities
+- **Interactive Charts**: Real-time visualisations of your health metrics with zoom and pan capabilities
 - **Tabbed Interface**: Clean navigation between User Management, Single User Dashboard, and Multi-User Export
 - **Dual Export Formats**: Choose between Long Format (detailed) or Wide Format (spreadsheet-friendly)
 - **Multi-User Export**: Bulk CSV export for multiple users across date ranges
