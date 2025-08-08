@@ -2,10 +2,6 @@
 
 A comprehensive Python web dashboard for visualising and analysing your Ultrahuman ring data locally. Get detailed insights into your sleep, heart rate, HRV, glucose levels, and more!
 
-![Ultrahuman Dashboard Screenshot](assets/images/dashboard-screenshot.png)
-
----
-
 ## How to Cite
 
 If you use this dashboard in your research or find it helpful, please cite it using the information below:
@@ -32,7 +28,36 @@ This repository includes a `CITATION.cff` file for easy citation management. Git
 
 ---
 
-## What This Project Does
+## Table of Contents
+
+- [📊 Dashboard Preview](#-dashboard-preview)
+- [🎯 What This Project Does](#-what-this-project-does)
+- [🚀 Getting Started](#-getting-started)
+  - [For Mac Users](#for-mac-users)
+  - [For Windows Users](#for-windows-users)
+- [🗄️ Database Setup](#️-database-setup)
+- [📖 How to Use the Dashboard](#-how-to-use-the-dashboard)
+  - [User Management](#1-user-management-tab)
+  - [Single User Dashboard](#2-single-user-dashboard-tab)
+  - [Multi-User Export](#3-multi-user-export-tab)
+- [📈 Understanding Your Data](#-understanding-your-data)
+- [⚡ Daily Usage](#-daily-usage)
+- [📁 Project Structure](#-project-structure)
+- [🔧 Troubleshooting](#-troubleshooting)
+- [🔒 Privacy & Security](#-privacy--security)
+- [✨ Features Overview](#-features-overview)
+- [💬 Support](#-support)
+- [📄 Licence](#-licence)
+
+---
+
+## 📊 Dashboard Preview
+
+![Ultrahuman Dashboard Screenshot](assets/images/dashboard-screenshot.png)
+
+---
+
+## 🎯 What This Project Does
 
 This dashboard provides:
 - **Comprehensive Health Analytics**: Sleep patterns, heart rate, HRV, glucose monitoring, and more
@@ -53,7 +78,7 @@ This dashboard provides:
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 This guide provides step-by-step installation instructions for users new to Python development.
 
@@ -194,7 +219,7 @@ Continue to the sections below for database setup and adding your Ultrahuman cre
 
 ---
 
-## Database Setup
+## 🗄️ Database Setup
 
 The database is created automatically when you first run the application.
 
@@ -275,7 +300,7 @@ Your credentials are now securely stored in your local database and you can begi
 
 ---
 
-## How to Use the Dashboard
+## 📖 How to Use the Dashboard
 
 The dashboard features three main tabs:
 
@@ -339,7 +364,7 @@ The dashboard features three main tabs:
 
 ---
 
-## Understanding Your Data
+## 📈 Understanding Your Data
 
 ### Sleep Metrics
 - **Bedtime/Wake Time**: Exact times with consistency analysis
@@ -363,7 +388,7 @@ The dashboard features three main tabs:
 
 ---
 
-## Daily Usage
+## ⚡ Daily Usage
 
 ### Quick Start (After Initial Setup)
 1. **Open Terminal/Command Prompt**
@@ -389,7 +414,7 @@ The dashboard features three main tabs:
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 ultrahuman_dashboard/
@@ -418,7 +443,7 @@ ultrahuman_dashboard/
 
 ---
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Errors and Solutions
 
@@ -461,7 +486,7 @@ pip install -r requirements.txt
 
 ---
 
-## Privacy & Security
+## 🔒 Privacy & Security
 
 - All data stays on your machine - nothing is sent to external servers
 - Database file is excluded from GitHub - your personal data never gets uploaded
@@ -470,7 +495,7 @@ pip install -r requirements.txt
 
 ---
 
-## Features Overview
+## ✨ Features Overview
 
 ### Dashboard Features
 - **Tabbed interface** with User Management, Single User Dashboard, and Multi-User Export
@@ -498,7 +523,7 @@ pip install -r requirements.txt
 
 ---
 
-## Support
+## 💬 Support
 
 This project is designed for personal use with Ultrahuman ring data. If you encounter issues:
 
@@ -509,7 +534,11 @@ This project is designed for personal use with Ultrahuman ring data. If you enco
 
 ---
 
-## License
+## 📄 Licence
 
 This project is for personal use with Ultrahuman ring data. Keep your API credentials secure and never share them publicly.
+
+---
+
+*For quick navigation, use the [Table of Contents](#table-of-contents) above to jump to specific sections.*
 
