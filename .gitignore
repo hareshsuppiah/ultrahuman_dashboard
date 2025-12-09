@@ -44,3 +44,6 @@ Thumbs.db
 
 # Private/personal files
 private/
+
+# API response samples (reference only)
+Samples/

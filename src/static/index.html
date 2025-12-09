@@ -556,6 +556,25 @@
             return result !== undefined ? result : defaultValue;
         }
 
+        // Helper function to format duration in seconds to "Xh Ym" format with minutes
+        function formatDuration(seconds) {
+            if (seconds === null || seconds === undefined || isNaN(seconds)) {
+                return { formatted: "N/A", totalMinutes: 0 };
+            }
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.round((seconds % 3600) / 60);
+            return {
+                formatted: `${hours}h ${minutes}m`,
+                totalMinutes: Math.round(seconds / 60)
+            };
+        }
+
+        // Helper function to get value from quick_metrics array by type
+        function getQuickMetric(quickMetrics, type) {
+            if (!quickMetrics || !Array.isArray(quickMetrics)) return null;
+            return quickMetrics.find(m => m.type === type);
+        }
+
         const userTableBody = document.getElementById("user-table").querySelector("tbody");
         const userSelect = document.getElementById("user-select");
         const userFormSection = document.getElementById("user-form-section");
@@ -919,12 +938,21 @@
                         if (hasFullSleepData) {
                             const bedtimeStart = new Date(safeGet(metric, 'object.bedtime_start') * 1000);
                             const bedtimeEnd = new Date(safeGet(metric, 'object.bedtime_end') * 1000);
-                            const duration = (safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start')) / 3600;
-                            
+                            const timeInBedSeconds = safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start');
+                            const timeInBed = formatDuration(timeInBedSeconds);
+
+                            // Get total sleep and efficiency from quick_metrics if available
+                            const quickMetrics = safeGet(metric, 'object.quick_metrics');
+                            const totalSleepMetric = getQuickMetric(quickMetrics, 'total_sleep');
+                            const sleepEfficiencyMetric = getQuickMetric(quickMetrics, 'sleep_efic');
+
+                            const totalSleep = totalSleepMetric ? formatDuration(totalSleepMetric.value) : null;
+                            const sleepEfficiency = sleepEfficiencyMetric ? sleepEfficiencyMetric.value : null;
+
                             // Instead of adding to current card, create multiple cards
                             card.innerHTML = content; // Finish the title card
                             metricsDisplay.appendChild(card); // Add the title card
-                            
+
                             // 1. Bedtime Card
                             const bedtimeCard = document.createElement("div");
                             bedtimeCard.className = "metric-card";
@@ -934,7 +962,7 @@
                                 <p class="metric-details">Sleep start time</p>
                             `;
                             metricsDisplay.appendChild(bedtimeCard);
-                            
+
                             // 2. Wake Time Card
                             const wakeCard = document.createElement("div");
                             wakeCard.className = "metric-card";
@@ -944,18 +972,42 @@
                                 <p class="metric-details">Sleep end time</p>
                             `;
                             metricsDisplay.appendChild(wakeCard);
-                            
-                            // 3. Sleep Duration Card
-                            const durationCard = document.createElement("div");
-                            durationCard.className = "metric-card";
-                            durationCard.innerHTML = `
-                                <h3>SLEEP DURATION</h3>
-                                <div class="metric-value">${duration.toFixed(1)} <span class="metric-unit">hours</span></div>
-                                <p class="metric-details">Total time in bed</p>
+
+                            // 3. Time in Bed Card
+                            const timeInBedCard = document.createElement("div");
+                            timeInBedCard.className = "metric-card";
+                            timeInBedCard.innerHTML = `
+                                <h3>TIME IN BED</h3>
+                                <div class="metric-value">${timeInBed.formatted} <span class="metric-unit">(${timeInBed.totalMinutes} min)</span></div>
+                                <p class="metric-details">From bedtime to wake time</p>
                             `;
-                            metricsDisplay.appendChild(durationCard);
+                            metricsDisplay.appendChild(timeInBedCard);
+
+                            // 4. Total Sleep Card (if available from quick_metrics)
+                            if (totalSleep) {
+                                const totalSleepCard = document.createElement("div");
+                                totalSleepCard.className = "metric-card";
+                                totalSleepCard.innerHTML = `
+                                    <h3>TOTAL SLEEP</h3>
+                                    <div class="metric-value">${totalSleep.formatted} <span class="metric-unit">(${totalSleep.totalMinutes} min)</span></div>
+                                    <p class="metric-details">Actual sleep time</p>
+                                `;
+                                metricsDisplay.appendChild(totalSleepCard);
+                            }
+
+                            // 5. Sleep Efficiency Card (if available from quick_metrics)
+                            if (sleepEfficiency !== null) {
+                                const efficiencyCard = document.createElement("div");
+                                efficiencyCard.className = "metric-card";
+                                efficiencyCard.innerHTML = `
+                                    <h3>SLEEP EFFICIENCY</h3>
+                                    <div class="metric-value">${sleepEfficiency} <span class="metric-unit">%</span></div>
+                                    <p class="metric-details">Total sleep / Time in bed</p>
+                                `;
+                                metricsDisplay.appendChild(efficiencyCard);
+                            }
                             
-                            // 4. Sleep Heart Rate Card
+                            // 6. Sleep Heart Rate Card
                             if (safeGet(metric, 'object.hr_graph') && safeGet(metric, 'object.hr_graph.gist_object')) {
                                 const hrGist = safeGet(metric, 'object.hr_graph.gist_object');
                                 const hrCard = document.createElement("div");
@@ -979,7 +1031,7 @@
                                 }
                             }
                             
-                            // 5. Sleep HRV Card
+                            // 7. Sleep HRV Card
                             if (safeGet(metric, 'object.hrv_graph') && safeGet(metric, 'object.hrv_graph.gist_object')) {
                                 const hrvGist = safeGet(metric, 'object.hrv_graph.gist_object');
                                 const hrvCard = document.createElement("div");
@@ -1127,100 +1179,147 @@
                     case "sleep":
                     case "Sleep":
                         // Create separate sleep analytics cards for multi-day view
-                        let totalSleepHours = 0;
+                        let totalTimeInBedSeconds = 0;
+                        let totalActualSleepSeconds = 0;
+                        let totalSleepEfficiency = 0;
                         let totalHR = 0;
                         let totalHRV = 0;
-                        let validSleepCount = 0;
+                        let validTimeInBedCount = 0;
+                        let validActualSleepCount = 0;
+                        let validEfficiencyCount = 0;
                         let validHRCount = 0;
                         let validHRVCount = 0;
                         let bedtimes = [];
                         let waketimes = [];
-                        
+
                         metrics.forEach(m => {
                             const hasValidSleepData = safeGet(m, 'object.bedtime_start') && safeGet(m, 'object.bedtime_end');
                             if (hasValidSleepData) {
-                                const duration = (safeGet(m, 'object.bedtime_end') - safeGet(m, 'object.bedtime_start')) / 3600;
-                                totalSleepHours += duration;
-                                validSleepCount++;
-                                
+                                const timeInBedSeconds = safeGet(m, 'object.bedtime_end') - safeGet(m, 'object.bedtime_start');
+                                totalTimeInBedSeconds += timeInBedSeconds;
+                                validTimeInBedCount++;
+
                                 // Collect bedtimes and wake times for consistency analysis
                                 const bedtime = new Date(safeGet(m, 'object.bedtime_start') * 1000);
                                 const waketime = new Date(safeGet(m, 'object.bedtime_end') * 1000);
                                 bedtimes.push(bedtime.getHours() + bedtime.getMinutes() / 60);
                                 waketimes.push(waketime.getHours() + waketime.getMinutes() / 60);
                             }
-                            
+
+                            // Get total sleep from quick_metrics
+                            const quickMetrics = safeGet(m, 'object.quick_metrics');
+                            const totalSleepMetric = getQuickMetric(quickMetrics, 'total_sleep');
+                            if (totalSleepMetric && totalSleepMetric.value) {
+                                totalActualSleepSeconds += totalSleepMetric.value;
+                                validActualSleepCount++;
+                            }
+
+                            // Get sleep efficiency from quick_metrics
+                            const sleepEfficiencyMetric = getQuickMetric(quickMetrics, 'sleep_efic');
+                            if (sleepEfficiencyMetric && sleepEfficiencyMetric.value !== null) {
+                                totalSleepEfficiency += sleepEfficiencyMetric.value;
+                                validEfficiencyCount++;
+                            }
+
                             // Handle HR data from multiple possible locations
                             const hrFromGraph = safeGet(m.object, 'hr_graph.gist_object.avg');
                             const hrFromQuickMetrics = safeGet(m, 'object.quick_metrics')?.find(
                                 metric => metric.type === 'avg_hr'
                             )?.value;
                             const hrValue = hrFromGraph || hrFromQuickMetrics;
-                            
+
                             if (hrValue) {
                                 totalHR += hrValue;
                                 validHRCount++;
                             }
-                            
+
                             // Handle HRV data from multiple possible locations
                             const hrvFromGraph = safeGet(m.object, 'hrv_graph.gist_object.avg');
                             const hrvFromQuickMetrics = safeGet(m, 'object.quick_metrics')?.find(
                                 metric => metric.type === 'avg_hrv'
                             )?.value;
                             const hrvValue = hrvFromGraph || hrvFromQuickMetrics;
-                            
+
                             if (hrvValue) {
                                 totalHRV += hrvValue;
                                 validHRVCount++;
                             }
                         });
-                        
+
                         // Create main sleep summary card
-                        content += `<div class="metric-value">${validSleepCount}/${metrics.length} <span class="metric-unit">nights</span></div>`;
+                        content += `<div class="metric-value">${validTimeInBedCount}/${metrics.length} <span class="metric-unit">nights</span></div>`;
                         content += `<p class="metric-details">Nights with sleep data</p>`;
                         card.innerHTML = content;
                         metricsDisplay.appendChild(card);
-                        
+
                         // Create separate cards for each sleep metric
-                        if (validSleepCount > 0) {
-                            // Average Sleep Duration
-                            const avgSleepHours = totalSleepHours / validSleepCount;
-                            const durationCard = document.createElement("div");
-                            durationCard.className = "metric-card";
-                            durationCard.innerHTML = `
-                                <h3>AVG SLEEP DURATION (${dateRange.length} days)</h3>
-                                <div class="metric-value">${avgSleepHours.toFixed(1)} <span class="metric-unit">hours</span></div>
-                                <p class="metric-details">Average nightly sleep duration</p>
+                        if (validTimeInBedCount > 0) {
+                            // Average Time in Bed
+                            const avgTimeInBedSeconds = totalTimeInBedSeconds / validTimeInBedCount;
+                            const avgTimeInBed = formatDuration(avgTimeInBedSeconds);
+                            const timeInBedCard = document.createElement("div");
+                            timeInBedCard.className = "metric-card";
+                            timeInBedCard.innerHTML = `
+                                <h3>AVG TIME IN BED (${dateRange.length} days)</h3>
+                                <div class="metric-value">${avgTimeInBed.formatted} <span class="metric-unit">(${avgTimeInBed.totalMinutes} min)</span></div>
+                                <p class="metric-details">Average time from bedtime to wake</p>
                             `;
-                            metricsDisplay.appendChild(durationCard);
-                            
-                            // Average Bedtime
-                            if (bedtimes.length > 0) {
-                                const avgBedtime = calculateCircularMean(bedtimes, 'bedtime');
-                                const bedtimeFormatted = formatTimeForDisplay(avgBedtime, 'bedtime');
-                                const bedtimeCard = document.createElement("div");
-                                bedtimeCard.className = "metric-card";
-                                bedtimeCard.innerHTML = `
-                                    <h3>AVG BEDTIME (${dateRange.length} days)</h3>
-                                    <div class="metric-value">${bedtimeFormatted.displayTime.replace(' ', ' <span class="metric-unit">') + '</span>'}</div>
-                                    <p class="metric-details">Average sleep start time</p>
-                                `;
-                                metricsDisplay.appendChild(bedtimeCard);
-                            }
-                            
-                            // Average Wake Time
-                            if (waketimes.length > 0) {
-                                const avgWaketime = calculateCircularMean(waketimes, 'waketime');
-                                const waketimeFormatted = formatTimeForDisplay(avgWaketime, 'waketime');
-                                const waketimeCard = document.createElement("div");
-                                waketimeCard.className = "metric-card";
-                                waketimeCard.innerHTML = `
-                                    <h3>AVG WAKE TIME (${dateRange.length} days)</h3>
-                                    <div class="metric-value">${waketimeFormatted.displayTime.replace(' ', ' <span class="metric-unit">') + '</span>'}</div>
-                                    <p class="metric-details">Average wake up time</p>
-                                `;
-                                metricsDisplay.appendChild(waketimeCard);
-                            }
+                            metricsDisplay.appendChild(timeInBedCard);
+                        }
+
+                        // Average Total Sleep (if available)
+                        if (validActualSleepCount > 0) {
+                            const avgActualSleepSeconds = totalActualSleepSeconds / validActualSleepCount;
+                            const avgActualSleep = formatDuration(avgActualSleepSeconds);
+                            const actualSleepCard = document.createElement("div");
+                            actualSleepCard.className = "metric-card";
+                            actualSleepCard.innerHTML = `
+                                <h3>AVG TOTAL SLEEP (${dateRange.length} days)</h3>
+                                <div class="metric-value">${avgActualSleep.formatted} <span class="metric-unit">(${avgActualSleep.totalMinutes} min)</span></div>
+                                <p class="metric-details">Average actual sleep time</p>
+                            `;
+                            metricsDisplay.appendChild(actualSleepCard);
+                        }
+
+                        // Average Sleep Efficiency (if available)
+                        if (validEfficiencyCount > 0) {
+                            const avgEfficiency = totalSleepEfficiency / validEfficiencyCount;
+                            const efficiencyCard = document.createElement("div");
+                            efficiencyCard.className = "metric-card";
+                            efficiencyCard.innerHTML = `
+                                <h3>AVG SLEEP EFFICIENCY (${dateRange.length} days)</h3>
+                                <div class="metric-value">${avgEfficiency.toFixed(0)} <span class="metric-unit">%</span></div>
+                                <p class="metric-details">Average sleep efficiency</p>
+                            `;
+                            metricsDisplay.appendChild(efficiencyCard);
+                        }
+
+                        // Average Bedtime
+                        if (bedtimes.length > 0) {
+                            const avgBedtime = calculateCircularMean(bedtimes, 'bedtime');
+                            const bedtimeFormatted = formatTimeForDisplay(avgBedtime, 'bedtime');
+                            const bedtimeCard = document.createElement("div");
+                            bedtimeCard.className = "metric-card";
+                            bedtimeCard.innerHTML = `
+                                <h3>AVG BEDTIME (${dateRange.length} days)</h3>
+                                <div class="metric-value">${bedtimeFormatted.displayTime.replace(' ', ' <span class="metric-unit">') + '</span>'}</div>
+                                <p class="metric-details">Average sleep start time</p>
+                            `;
+                            metricsDisplay.appendChild(bedtimeCard);
+                        }
+
+                        // Average Wake Time
+                        if (waketimes.length > 0) {
+                            const avgWaketime = calculateCircularMean(waketimes, 'waketime');
+                            const waketimeFormatted = formatTimeForDisplay(avgWaketime, 'waketime');
+                            const waketimeCard = document.createElement("div");
+                            waketimeCard.className = "metric-card";
+                            waketimeCard.innerHTML = `
+                                <h3>AVG WAKE TIME (${dateRange.length} days)</h3>
+                                <div class="metric-value">${waketimeFormatted.displayTime.replace(' ', ' <span class="metric-unit">') + '</span>'}</div>
+                                <p class="metric-details">Average wake up time</p>
+                            `;
+                            metricsDisplay.appendChild(waketimeCard);
                         }
                         
                         if (validHRCount > 0) {
@@ -1404,8 +1503,16 @@
                     if (hasFullSleepData) {
                         const bedtimeStart = new Date(safeGet(metric, 'object.bedtime_start') * 1000);
                         const bedtimeEnd = new Date(safeGet(metric, 'object.bedtime_end') * 1000);
-                        const duration = (safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start')) / 3600;
-                        
+                        const timeInBedSeconds = safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start');
+                        const timeInBed = formatDuration(timeInBedSeconds);
+
+                        // Get total sleep and efficiency from quick_metrics
+                        const quickMetrics = safeGet(metric, 'object.quick_metrics');
+                        const totalSleepMetric = getQuickMetric(quickMetrics, 'total_sleep');
+                        const sleepEfficiencyMetric = getQuickMetric(quickMetrics, 'sleep_efic');
+                        const totalSleep = totalSleepMetric ? formatDuration(totalSleepMetric.value) : null;
+                        const sleepEfficiency = sleepEfficiencyMetric ? sleepEfficiencyMetric.value : null;
+
                         // Bedtime
                         csvRows.push([
                             userEmail,
@@ -1415,7 +1522,7 @@
                             "Time",
                             "Sleep start time"
                         ].join(","));
-                        
+
                         // Wake time
                         csvRows.push([
                             userEmail,
@@ -1425,16 +1532,59 @@
                             "Time",
                             "Sleep end time"
                         ].join(","));
-                        
-                        // Sleep duration
+
+                        // Time in Bed (formatted)
                         csvRows.push([
                             userEmail,
                             date,
-                            "Sleep Duration",
-                            duration.toFixed(1),
-                            "hours",
-                            "Total time in bed"
+                            "Time in Bed",
+                            timeInBed.formatted,
+                            "hours/min",
+                            "From bedtime to wake time"
                         ].join(","));
+
+                        // Time in Bed (minutes)
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            "Time in Bed (Minutes)",
+                            timeInBed.totalMinutes,
+                            "min",
+                            "Time in bed in minutes"
+                        ].join(","));
+
+                        // Total Sleep (if available)
+                        if (totalSleep) {
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Total Sleep",
+                                totalSleep.formatted,
+                                "hours/min",
+                                "Actual sleep time"
+                            ].join(","));
+
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Total Sleep (Minutes)",
+                                totalSleep.totalMinutes,
+                                "min",
+                                "Actual sleep time in minutes"
+                            ].join(","));
+                        }
+
+                        // Sleep Efficiency (if available)
+                        if (sleepEfficiency !== null) {
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Sleep Efficiency",
+                                sleepEfficiency,
+                                "%",
+                                "Total sleep / Time in bed"
+                            ].join(","));
+                        }
                         
                         // Sleep heart rate metrics
                         if (safeGet(metric, 'object.hr_graph') && safeGet(metric, 'object.hr_graph.gist_object')) {
@@ -1950,23 +2100,43 @@
                 // Process different metric types
                 if (metric.type === "sleep" || metric.type === "Sleep") {
                     const hasFullSleepData = safeGet(metric, 'object.bedtime_start') && safeGet(metric, 'object.bedtime_end');
-                    
+
                     if (hasFullSleepData) {
                         const bedtimeStart = new Date(safeGet(metric, 'object.bedtime_start') * 1000);
                         const bedtimeEnd = new Date(safeGet(metric, 'object.bedtime_end') * 1000);
-                        const duration = (safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start')) / 3600;
-                        
+                        const timeInBedSeconds = safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start');
+                        const timeInBed = formatDuration(timeInBedSeconds);
+
+                        // Get total sleep and efficiency from quick_metrics
+                        const quickMetrics = safeGet(metric, 'object.quick_metrics');
+                        const totalSleepMetric = getQuickMetric(quickMetrics, 'total_sleep');
+                        const sleepEfficiencyMetric = getQuickMetric(quickMetrics, 'sleep_efic');
+                        const totalSleep = totalSleepMetric ? formatDuration(totalSleepMetric.value) : null;
+                        const sleepEfficiency = sleepEfficiencyMetric ? sleepEfficiencyMetric.value : null;
+
                         groupedData[key].metrics['Bedtime'] = bedtimeStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
                         groupedData[key].metrics['Wake_Time'] = bedtimeEnd.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                        groupedData[key].metrics['Sleep_Duration_Hours'] = duration.toFixed(1);
-                        
+                        groupedData[key].metrics['Time_In_Bed_HM'] = timeInBed.formatted;
+                        groupedData[key].metrics['Time_In_Bed_Min'] = timeInBed.totalMinutes;
+
+                        // Total Sleep (if available)
+                        if (totalSleep) {
+                            groupedData[key].metrics['Total_Sleep_HM'] = totalSleep.formatted;
+                            groupedData[key].metrics['Total_Sleep_Min'] = totalSleep.totalMinutes;
+                        }
+
+                        // Sleep Efficiency (if available)
+                        if (sleepEfficiency !== null) {
+                            groupedData[key].metrics['Sleep_Efficiency_Pct'] = sleepEfficiency;
+                        }
+
                         // Sleep Heart Rate
                         if (safeGet(metric, 'object.hr_graph.gist_object.avg')) {
                             groupedData[key].metrics['Sleep_HR_Avg_BPM'] = safeGet(metric, 'object.hr_graph.gist_object.avg');
                             groupedData[key].metrics['Sleep_HR_Min_BPM'] = safeGet(metric, 'object.hr_graph.gist_object.min', 'N/A');
                             groupedData[key].metrics['Sleep_HR_Max_BPM'] = safeGet(metric, 'object.hr_graph.gist_object.max', 'N/A');
                         }
-                        
+
                         // Sleep HRV
                         if (safeGet(metric, 'object.hrv_graph.gist_object.avg')) {
                             groupedData[key].metrics['Sleep_HRV_Avg_MS'] = safeGet(metric, 'object.hrv_graph.gist_object.avg');
@@ -2005,7 +2175,7 @@
                 if (b === 'Date') return 1;
                 
                 // Sort sleep metrics first, then others alphabetically
-                const sleepMetrics = ['Bedtime', 'Wake_Time', 'Sleep_Duration_Hours', 'Sleep_HR_Avg_BPM', 'Sleep_HR_Min_BPM', 'Sleep_HR_Max_BPM', 'Sleep_HRV_Avg_MS', 'Sleep_HRV_Min_MS', 'Sleep_HRV_Max_MS'];
+                const sleepMetrics = ['Bedtime', 'Wake_Time', 'Time_In_Bed_HM', 'Time_In_Bed_Min', 'Total_Sleep_HM', 'Total_Sleep_Min', 'Sleep_Efficiency_Pct', 'Sleep_HR_Avg_BPM', 'Sleep_HR_Min_BPM', 'Sleep_HR_Max_BPM', 'Sleep_HRV_Avg_MS', 'Sleep_HRV_Min_MS', 'Sleep_HRV_Max_MS'];
                 const aIsSleep = sleepMetrics.includes(a);
                 const bIsSleep = sleepMetrics.includes(b);
                 
@@ -2060,12 +2230,20 @@
                 // Handle sleep metrics by creating multiple CSV rows for each sleep component
                 if (metric.type === "sleep" || metric.type === "Sleep") {
                     const hasFullSleepData = safeGet(metric, 'object.bedtime_start') && safeGet(metric, 'object.bedtime_end');
-                    
+
                     if (hasFullSleepData) {
                         const bedtimeStart = new Date(safeGet(metric, 'object.bedtime_start') * 1000);
                         const bedtimeEnd = new Date(safeGet(metric, 'object.bedtime_end') * 1000);
-                        const duration = (safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start')) / 3600;
-                        
+                        const timeInBedSeconds = safeGet(metric, 'object.bedtime_end') - safeGet(metric, 'object.bedtime_start');
+                        const timeInBed = formatDuration(timeInBedSeconds);
+
+                        // Get total sleep and efficiency from quick_metrics
+                        const quickMetrics = safeGet(metric, 'object.quick_metrics');
+                        const totalSleepMetric = getQuickMetric(quickMetrics, 'total_sleep');
+                        const sleepEfficiencyMetric = getQuickMetric(quickMetrics, 'sleep_efic');
+                        const totalSleep = totalSleepMetric ? formatDuration(totalSleepMetric.value) : null;
+                        const sleepEfficiency = sleepEfficiencyMetric ? sleepEfficiencyMetric.value : null;
+
                         // Bedtime
                         csvRows.push([
                             `"${userEmail}"`,
@@ -2075,7 +2253,7 @@
                             "Time",
                             "Sleep start time"
                         ].join(","));
-                        
+
                         // Wake Time
                         csvRows.push([
                             `"${userEmail}"`,
@@ -2085,17 +2263,60 @@
                             "Time",
                             "Sleep end time"
                         ].join(","));
-                        
-                        // Sleep Duration
+
+                        // Time in Bed (formatted)
                         csvRows.push([
                             `"${userEmail}"`,
                             date,
-                            "Sleep Duration",
-                            duration.toFixed(1),
-                            "hours",
-                            "Total time in bed"
+                            "Time in Bed",
+                            timeInBed.formatted,
+                            "hours/min",
+                            "From bedtime to wake time"
                         ].join(","));
-                        
+
+                        // Time in Bed (minutes)
+                        csvRows.push([
+                            `"${userEmail}"`,
+                            date,
+                            "Time in Bed (Minutes)",
+                            timeInBed.totalMinutes,
+                            "min",
+                            "Time in bed in minutes"
+                        ].join(","));
+
+                        // Total Sleep (if available)
+                        if (totalSleep) {
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Total Sleep",
+                                totalSleep.formatted,
+                                "hours/min",
+                                "Actual sleep time"
+                            ].join(","));
+
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Total Sleep (Minutes)",
+                                totalSleep.totalMinutes,
+                                "min",
+                                "Actual sleep time in minutes"
+                            ].join(","));
+                        }
+
+                        // Sleep Efficiency (if available)
+                        if (sleepEfficiency !== null) {
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Sleep Efficiency",
+                                sleepEfficiency,
+                                "%",
+                                "Total sleep / Time in bed"
+                            ].join(","));
+                        }
+
                         // Sleep Heart Rate
                         if (safeGet(metric, 'object.hr_graph.gist_object.avg')) {
                             csvRows.push([
@@ -2107,7 +2328,7 @@
                                 `Min: ${safeGet(metric, 'object.hr_graph.gist_object.min', 'N/A')} bpm`
                             ].join(","));
                         }
-                        
+
                         // Sleep HRV
                         if (safeGet(metric, 'object.hrv_graph.gist_object.avg')) {
                             csvRows.push([
