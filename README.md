@@ -41,6 +41,7 @@ This repository includes a `CITATION.cff` file for easy citation management. Git
   - [Single User Dashboard](#2-single-user-dashboard-tab)
   - [Multi-User Export](#3-multi-user-export-tab)
 - [📈 Understanding Your Data](#-understanding-your-data)
+- [🔬 Technical Notes for Researchers](#-technical-notes-for-researchers)
 - [⚡ Daily Usage](#-daily-usage)
 - [📁 Project Structure](#-project-structure)
 - [🔧 Troubleshooting](#-troubleshooting)
@@ -385,6 +386,56 @@ The dashboard features three main tabs:
 - **Steps**: Daily step count
 - **Active Minutes**: Time spent in active movement
 - **VO2 Max**: Cardiovascular fitness indicator
+
+---
+
+## 🔬 Technical Notes for Researchers
+
+### Data Timing Clarification
+
+**Sleep Data Date Reference**
+- The `Date` column represents the **wake-up date** (end of sleep session)
+- Bedtime typically occurs on the **previous calendar day**
+- Example: Date = 2025-12-07 means sleep session ending on Dec 7th morning
+- Use `Bedtime_Date` and `Wake_Date` columns for precise date analysis
+
+**Steps Data Timing**
+- `Steps_Daily` represents the **full calendar day** step count (midnight to midnight)
+- For Date = 2025-12-07, steps are from 00:00 to 23:59 on Dec 7th
+- Steps and sleep data have different time windows for the same date
+
+**Unix Timestamps**
+- `Bedtime_Unix` and `Wake_Unix` provide raw unix timestamps (seconds since epoch)
+- Useful for precise time calculations and cross-system compatibility
+
+### Total Sleep: API vs Derived Values
+
+The export includes two Total Sleep measurements:
+
+| Column | Source | Calculation |
+|--------|--------|-------------|
+| `Total_Sleep_API_*` | Ultrahuman quick_metrics | Pre-calculated by Ultrahuman |
+| `Total_Sleep_Derived_*` | sleep_graph.data segments | Deep + Light + REM minutes |
+
+**Note**: These values may differ by a few minutes due to internal Ultrahuman calculations. Both are provided for researcher discretion.
+
+### Sleep Metric Definitions
+
+| Metric | Definition |
+|--------|------------|
+| `Time_In_Bed` | Total duration from bedtime to wake time |
+| `Total_Sleep` | Time spent in sleep stages (Deep + Light + REM) |
+| `Sleep_Efficiency` | (Total Sleep / Time In Bed) × 100 |
+| `SOL` (Sleep Onset Latency) | Time awake at start of sleep session |
+| `WASO` (Wake After Sleep Onset) | Total wake time after first falling asleep |
+| `Wake_Episodes` | Number of awakenings after sleep onset |
+
+### Data Validation
+
+Expected relationships:
+- `Deep_Sleep + Light_Sleep + REM_Sleep + Awake = Time_In_Bed` ✓
+- `SOL + WASO = Awake` ✓
+- `Total_Sleep_Derived = Deep_Sleep + Light_Sleep + REM_Sleep` ✓
 
 ---
 
