@@ -229,11 +229,35 @@
             margin-left: 8px; 
             font-weight: 500;
         } 
-        .metric-details { 
-            font-size: 0.875rem; 
-            color: #6b7280; 
+        .metric-details {
+            font-size: 0.875rem;
+            color: #6b7280;
             margin: 8px 0;
-        } 
+        }
+        .stages-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .stage-item {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .stage-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            margin-bottom: 4px;
+        }
+        .stage-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
         canvas { 
             max-width: 100%; 
             height: 250px !important; 
@@ -573,6 +597,66 @@
         function getQuickMetric(quickMetrics, type) {
             if (!quickMetrics || !Array.isArray(quickMetrics)) return null;
             return quickMetrics.find(m => m.type === type);
+        }
+
+        // Helper function to process sleep_graph.data for derived metrics
+        function processSleepGraphData(sleepGraphData) {
+            if (!sleepGraphData || !Array.isArray(sleepGraphData) || sleepGraphData.length === 0) {
+                return { hasData: false, deepSleepMin: 0, lightSleepMin: 0, remSleepMin: 0,
+                         awakeMin: 0, sleepOnsetLatencyMin: 0, wasoMin: 0, wakeEpisodes: 0,
+                         totalSleepDerivedMin: 0 };
+            }
+
+            let deepSleepSeconds = 0, lightSleepSeconds = 0, remSleepSeconds = 0, awakeSeconds = 0;
+            const awakeSegments = [];
+
+            sleepGraphData.forEach((segment, index) => {
+                const duration = segment.end - segment.start;
+                switch (segment.type) {
+                    case 'deep_sleep': deepSleepSeconds += duration; break;
+                    case 'light_sleep': lightSleepSeconds += duration; break;
+                    case 'rem_sleep': remSleepSeconds += duration; break;
+                    case 'awake':
+                        awakeSeconds += duration;
+                        awakeSegments.push({ index, duration });
+                        break;
+                }
+            });
+
+            // SOL: First awake segment if index === 0
+            let solSeconds = (awakeSegments.length > 0 && awakeSegments[0].index === 0)
+                             ? awakeSegments[0].duration : 0;
+
+            // WASO: All awake segments AFTER first (includes final wake) - traditional definition
+            let wasoSeconds = 0, wakeEpisodes = 0;
+            if (awakeSegments.length > 1) {
+                // Skip first segment (SOL), include all others including final
+                awakeSegments.slice(1).forEach(seg => wasoSeconds += seg.duration);
+                wakeEpisodes = awakeSegments.length - 1;
+            }
+
+            // Derived total sleep = Deep + Light + REM (from sleep_graph segments)
+            const totalSleepDerivedSeconds = deepSleepSeconds + lightSleepSeconds + remSleepSeconds;
+
+            return {
+                hasData: true,
+                deepSleepMin: Math.round(deepSleepSeconds / 60),
+                lightSleepMin: Math.round(lightSleepSeconds / 60),
+                remSleepMin: Math.round(remSleepSeconds / 60),
+                awakeMin: Math.round(awakeSeconds / 60),
+                sleepOnsetLatencyMin: Math.round(solSeconds / 60),
+                wasoMin: Math.round(wasoSeconds / 60),
+                wakeEpisodes: wakeEpisodes,
+                totalSleepDerivedMin: Math.round(totalSleepDerivedSeconds / 60)
+            };
+        }
+
+        // Helper function to get steps from metrics array
+        function getStepsFromMetrics(metrics) {
+            if (!metrics || !Array.isArray(metrics)) return 0;
+            const stepsMetric = metrics.find(m => m.type === 'steps');
+            // Use total (full day count) as primary, fall back to avg
+            return stepsMetric ? (safeGet(stepsMetric, 'object.total') || safeGet(stepsMetric, 'object.avg') || 0) : 0;
         }
 
         const userTableBody = document.getElementById("user-table").querySelector("tbody");
@@ -983,14 +1067,14 @@
                             `;
                             metricsDisplay.appendChild(timeInBedCard);
 
-                            // 4. Total Sleep Card (if available from quick_metrics)
+                            // 4. Total Sleep Card (API value from quick_metrics)
                             if (totalSleep) {
                                 const totalSleepCard = document.createElement("div");
                                 totalSleepCard.className = "metric-card";
                                 totalSleepCard.innerHTML = `
-                                    <h3>TOTAL SLEEP</h3>
+                                    <h3>TOTAL SLEEP (API)</h3>
                                     <div class="metric-value">${totalSleep.formatted} <span class="metric-unit">(${totalSleep.totalMinutes} min)</span></div>
-                                    <p class="metric-details">Actual sleep time</p>
+                                    <p class="metric-details">From API quick_metrics</p>
                                 `;
                                 metricsDisplay.appendChild(totalSleepCard);
                             }
@@ -1006,8 +1090,69 @@
                                 `;
                                 metricsDisplay.appendChild(efficiencyCard);
                             }
-                            
-                            // 6. Sleep Heart Rate Card
+
+                            // 6. Derived Sleep Metrics from sleep_graph.data
+                            const sleepGraphData = processSleepGraphData(safeGet(metric, 'object.sleep_graph.data'));
+                            if (sleepGraphData.hasData) {
+                                // Sleep Stages Card
+                                const stagesCard = document.createElement("div");
+                                stagesCard.className = "metric-card";
+                                stagesCard.innerHTML = `
+                                    <h3>SLEEP STAGES</h3>
+                                    <div class="stages-grid">
+                                        <div class="stage-item"><span class="stage-label">Deep</span><span class="stage-value">${sleepGraphData.deepSleepMin} min</span></div>
+                                        <div class="stage-item"><span class="stage-label">Light</span><span class="stage-value">${sleepGraphData.lightSleepMin} min</span></div>
+                                        <div class="stage-item"><span class="stage-label">REM</span><span class="stage-value">${sleepGraphData.remSleepMin} min</span></div>
+                                        <div class="stage-item"><span class="stage-label">Awake</span><span class="stage-value">${sleepGraphData.awakeMin} min</span></div>
+                                    </div>
+                                `;
+                                metricsDisplay.appendChild(stagesCard);
+
+                                // Total Sleep (Derived) Card - calculated from Deep + Light + REM
+                                const totalSleepDerivedCard = document.createElement("div");
+                                totalSleepDerivedCard.className = "metric-card";
+                                const derivedHours = Math.floor(sleepGraphData.totalSleepDerivedMin / 60);
+                                const derivedMins = sleepGraphData.totalSleepDerivedMin % 60;
+                                totalSleepDerivedCard.innerHTML = `
+                                    <h3>TOTAL SLEEP (DERIVED)</h3>
+                                    <div class="metric-value">${derivedHours}h ${derivedMins}m <span class="metric-unit">(${sleepGraphData.totalSleepDerivedMin} min)</span></div>
+                                    <p class="metric-details">Deep + Light + REM from segments</p>
+                                `;
+                                metricsDisplay.appendChild(totalSleepDerivedCard);
+
+                                // Sleep Onset Latency Card
+                                const solCard = document.createElement("div");
+                                solCard.className = "metric-card";
+                                solCard.innerHTML = `
+                                    <h3>SLEEP ONSET LATENCY</h3>
+                                    <div class="metric-value">${sleepGraphData.sleepOnsetLatencyMin} <span class="metric-unit">min</span></div>
+                                    <p class="metric-details">Time from bedtime to first sleep</p>
+                                `;
+                                metricsDisplay.appendChild(solCard);
+
+                                // WASO Card
+                                const wasoCard = document.createElement("div");
+                                wasoCard.className = "metric-card";
+                                wasoCard.innerHTML = `
+                                    <h3>WASO</h3>
+                                    <div class="metric-value">${sleepGraphData.wasoMin} <span class="metric-unit">min</span></div>
+                                    <p class="metric-details">Wake After Sleep Onset</p>
+                                `;
+                                metricsDisplay.appendChild(wasoCard);
+
+                                // Wake Episodes Card
+                                const wakeEpisodesCard = document.createElement("div");
+                                wakeEpisodesCard.className = "metric-card";
+                                wakeEpisodesCard.innerHTML = `
+                                    <h3>WAKE EPISODES</h3>
+                                    <div class="metric-value">${sleepGraphData.wakeEpisodes} <span class="metric-unit">count</span></div>
+                                    <p class="metric-details">Awakenings during sleep</p>
+                                `;
+                                metricsDisplay.appendChild(wakeEpisodesCard);
+
+                            }
+
+                            // 7. Sleep Heart Rate Card
                             if (safeGet(metric, 'object.hr_graph') && safeGet(metric, 'object.hr_graph.gist_object')) {
                                 const hrGist = safeGet(metric, 'object.hr_graph.gist_object');
                                 const hrCard = document.createElement("div");
@@ -1094,10 +1239,14 @@
                         }
                         break;
                     case "steps":
+                        // Use total (full day count) as primary
+                        const dailySteps = safeGet(metric, 'object.total') || safeGet(metric, 'object.avg') || 0;
+                        content += `<div class="metric-value">${dailySteps ? dailySteps.toFixed(0) : "N/A"} <span class="metric-unit">Steps</span></div>`;
+                        content += `<p class="metric-details">Daily total (calendar day)</p>`;
+                        break;
                     case "motion": // Assuming motion index
-                        content += `<div class="metric-value">${safeGet(metric, 'object.avg') ? safeGet(metric, 'object.avg').toFixed(0) : "N/A"} <span class="metric-unit">${metric.type === "steps" ? "Steps" : "Index"}</span></div>`;
+                        content += `<div class="metric-value">${safeGet(metric, 'object.avg') ? safeGet(metric, 'object.avg').toFixed(0) : "N/A"} <span class="metric-unit">Index</span></div>`;
                         if (safeGet(metric, 'object.subtitle')) content += `<p class="metric-details">(${safeGet(metric, 'object.subtitle')})</p>`;
-                        // Could add chart for values over time if useful
                         break;
                     case "recovery": // Recovery Index
                     case "movement": // Movement Index
@@ -1192,6 +1341,11 @@
                         let bedtimes = [];
                         let waketimes = [];
 
+                        // Derived sleep metrics aggregation
+                        let totalDeepSleepMin = 0, totalLightSleepMin = 0, totalRemSleepMin = 0, totalAwakeMin = 0;
+                        let totalSolMin = 0, totalWasoMin = 0, totalWakeEpisodes = 0, totalTotalSleepDerivedMin = 0;
+                        let validSleepGraphCount = 0;
+
                         metrics.forEach(m => {
                             const hasValidSleepData = safeGet(m, 'object.bedtime_start') && safeGet(m, 'object.bedtime_end');
                             if (hasValidSleepData) {
@@ -1244,6 +1398,20 @@
                                 totalHRV += hrvValue;
                                 validHRVCount++;
                             }
+
+                            // Process derived sleep metrics from sleep_graph.data
+                            const sleepGraphDataForAgg = processSleepGraphData(safeGet(m, 'object.sleep_graph.data'));
+                            if (sleepGraphDataForAgg.hasData) {
+                                totalDeepSleepMin += sleepGraphDataForAgg.deepSleepMin;
+                                totalLightSleepMin += sleepGraphDataForAgg.lightSleepMin;
+                                totalRemSleepMin += sleepGraphDataForAgg.remSleepMin;
+                                totalAwakeMin += sleepGraphDataForAgg.awakeMin;
+                                totalSolMin += sleepGraphDataForAgg.sleepOnsetLatencyMin;
+                                totalWasoMin += sleepGraphDataForAgg.wasoMin;
+                                totalWakeEpisodes += sleepGraphDataForAgg.wakeEpisodes;
+                                totalTotalSleepDerivedMin += sleepGraphDataForAgg.totalSleepDerivedMin;
+                                validSleepGraphCount++;
+                            }
                         });
 
                         // Create main sleep summary card
@@ -1267,18 +1435,33 @@
                             metricsDisplay.appendChild(timeInBedCard);
                         }
 
-                        // Average Total Sleep (if available)
+                        // Average Total Sleep - API value (if available)
                         if (validActualSleepCount > 0) {
                             const avgActualSleepSeconds = totalActualSleepSeconds / validActualSleepCount;
                             const avgActualSleep = formatDuration(avgActualSleepSeconds);
                             const actualSleepCard = document.createElement("div");
                             actualSleepCard.className = "metric-card";
                             actualSleepCard.innerHTML = `
-                                <h3>AVG TOTAL SLEEP (${dateRange.length} days)</h3>
+                                <h3>AVG TOTAL SLEEP API (${dateRange.length} days)</h3>
                                 <div class="metric-value">${avgActualSleep.formatted} <span class="metric-unit">(${avgActualSleep.totalMinutes} min)</span></div>
-                                <p class="metric-details">Average actual sleep time</p>
+                                <p class="metric-details">From API quick_metrics</p>
                             `;
                             metricsDisplay.appendChild(actualSleepCard);
+                        }
+
+                        // Average Total Sleep - Derived (Deep + Light + REM)
+                        if (validSleepGraphCount > 0) {
+                            const avgDerivedSleepMin = Math.round(totalTotalSleepDerivedMin / validSleepGraphCount);
+                            const derivedHours = Math.floor(avgDerivedSleepMin / 60);
+                            const derivedMins = avgDerivedSleepMin % 60;
+                            const derivedSleepCard = document.createElement("div");
+                            derivedSleepCard.className = "metric-card";
+                            derivedSleepCard.innerHTML = `
+                                <h3>AVG TOTAL SLEEP DERIVED (${dateRange.length} days)</h3>
+                                <div class="metric-value">${derivedHours}h ${derivedMins}m <span class="metric-unit">(${avgDerivedSleepMin} min)</span></div>
+                                <p class="metric-details">Deep + Light + REM from segments</p>
+                            `;
+                            metricsDisplay.appendChild(derivedSleepCard);
                         }
 
                         // Average Sleep Efficiency (if available)
@@ -1345,7 +1528,63 @@
                             `;
                             metricsDisplay.appendChild(hrvCard);
                         }
-                        
+
+                        // Derived Sleep Metrics Cards
+                        if (validSleepGraphCount > 0) {
+                            // Average Sleep Stages Card
+                            const avgDeep = Math.round(totalDeepSleepMin / validSleepGraphCount);
+                            const avgLight = Math.round(totalLightSleepMin / validSleepGraphCount);
+                            const avgRem = Math.round(totalRemSleepMin / validSleepGraphCount);
+                            const avgAwake = Math.round(totalAwakeMin / validSleepGraphCount);
+
+                            const stagesCard = document.createElement("div");
+                            stagesCard.className = "metric-card";
+                            stagesCard.innerHTML = `
+                                <h3>AVG SLEEP STAGES (${dateRange.length} days)</h3>
+                                <div class="stages-grid">
+                                    <div class="stage-item"><span class="stage-label">Deep</span><span class="stage-value">${avgDeep} min</span></div>
+                                    <div class="stage-item"><span class="stage-label">Light</span><span class="stage-value">${avgLight} min</span></div>
+                                    <div class="stage-item"><span class="stage-label">REM</span><span class="stage-value">${avgRem} min</span></div>
+                                    <div class="stage-item"><span class="stage-label">Awake</span><span class="stage-value">${avgAwake} min</span></div>
+                                </div>
+                            `;
+                            metricsDisplay.appendChild(stagesCard);
+
+                            // Average Sleep Onset Latency Card
+                            const avgSol = Math.round(totalSolMin / validSleepGraphCount);
+                            const solCard = document.createElement("div");
+                            solCard.className = "metric-card";
+                            solCard.innerHTML = `
+                                <h3>AVG SLEEP ONSET LATENCY (${dateRange.length} days)</h3>
+                                <div class="metric-value">${avgSol} <span class="metric-unit">min</span></div>
+                                <p class="metric-details">Average time from bedtime to first sleep</p>
+                            `;
+                            metricsDisplay.appendChild(solCard);
+
+                            // Average WASO Card
+                            const avgWaso = Math.round(totalWasoMin / validSleepGraphCount);
+                            const wasoCard = document.createElement("div");
+                            wasoCard.className = "metric-card";
+                            wasoCard.innerHTML = `
+                                <h3>AVG WASO (${dateRange.length} days)</h3>
+                                <div class="metric-value">${avgWaso} <span class="metric-unit">min</span></div>
+                                <p class="metric-details">Average Wake After Sleep Onset</p>
+                            `;
+                            metricsDisplay.appendChild(wasoCard);
+
+                            // Average Wake Episodes Card
+                            const avgWakeEp = (totalWakeEpisodes / validSleepGraphCount).toFixed(1);
+                            const wakeEpisodesCard = document.createElement("div");
+                            wakeEpisodesCard.className = "metric-card";
+                            wakeEpisodesCard.innerHTML = `
+                                <h3>AVG WAKE EPISODES (${dateRange.length} days)</h3>
+                                <div class="metric-value">${avgWakeEp} <span class="metric-unit">per night</span></div>
+                                <p class="metric-details">Average awakenings during sleep</p>
+                            `;
+                            metricsDisplay.appendChild(wakeEpisodesCard);
+
+                        }
+
                         // Skip normal card creation since we created multiple cards
                         return;
                         break;
@@ -1380,12 +1619,13 @@
                         break;
                     case "steps":
                         const validStepsMetrics = metrics.filter(m => m && m.object);
+                        // Use total (full day count) as primary for each day
                         const totalSteps = validStepsMetrics.reduce((sum, m) => {
-                            return sum + (safeGet(m, 'object.avg') || safeGet(m, 'object.value') || safeGet(m, 'object.total') || 0);
+                            return sum + (safeGet(m, 'object.total') || safeGet(m, 'object.avg') || safeGet(m, 'object.value') || 0);
                         }, 0);
                         const avgSteps = totalSteps / (validStepsMetrics.length || 1);
                         content += `<div class="metric-value">${totalSteps.toFixed(0)} <span class="metric-unit">Total Steps</span></div>`;
-                        content += `<p class="metric-details">Daily Average: ${avgSteps.toFixed(0)} steps</p>`;
+                        content += `<p class="metric-details">Daily Average: ${avgSteps.toFixed(0)} steps (calendar day)</p>`;
                         break;
                     case "avg_sleep_hrv":
                         const validHrvMetrics = metrics.filter(m => m && m.object);
@@ -1533,6 +1773,46 @@
                             "Sleep end time"
                         ].join(","));
 
+                        // Bedtime Date
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            "Bedtime Date",
+                            bedtimeStart.toLocaleDateString('en-CA'),
+                            "Date",
+                            "Calendar date of bedtime"
+                        ].join(","));
+
+                        // Wake Date
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            "Wake Date",
+                            bedtimeEnd.toLocaleDateString('en-CA'),
+                            "Date",
+                            "Calendar date of wake time"
+                        ].join(","));
+
+                        // Bedtime Unix Timestamp
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            "Bedtime Unix",
+                            safeGet(metric, 'object.bedtime_start'),
+                            "Unix",
+                            "Unix timestamp of bedtime (seconds)"
+                        ].join(","));
+
+                        // Wake Unix Timestamp
+                        csvRows.push([
+                            userEmail,
+                            date,
+                            "Wake Unix",
+                            safeGet(metric, 'object.bedtime_end'),
+                            "Unix",
+                            "Unix timestamp of wake time (seconds)"
+                        ].join(","));
+
                         // Time in Bed (formatted)
                         csvRows.push([
                             userEmail,
@@ -1553,24 +1833,24 @@
                             "Time in bed in minutes"
                         ].join(","));
 
-                        // Total Sleep (if available)
+                        // Total Sleep - API value (if available)
                         if (totalSleep) {
                             csvRows.push([
                                 userEmail,
                                 date,
-                                "Total Sleep",
+                                "Total Sleep (API)",
                                 totalSleep.formatted,
                                 "hours/min",
-                                "Actual sleep time"
+                                "From API quick_metrics"
                             ].join(","));
 
                             csvRows.push([
                                 userEmail,
                                 date,
-                                "Total Sleep (Minutes)",
+                                "Total Sleep API (Minutes)",
                                 totalSleep.totalMinutes,
                                 "min",
-                                "Actual sleep time in minutes"
+                                "From API quick_metrics in minutes"
                             ].join(","));
                         }
 
@@ -1633,6 +1913,97 @@
                                 ].join(","));
                             }
                         }
+
+                        // Derived sleep metrics from sleep_graph.data
+                        const sleepGraphDataCSV = processSleepGraphData(safeGet(metric, 'object.sleep_graph.data'));
+                        if (sleepGraphDataCSV.hasData) {
+                            // Sleep stage durations
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Deep Sleep",
+                                sleepGraphDataCSV.deepSleepMin,
+                                "min",
+                                "Deep sleep duration"
+                            ].join(","));
+
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Light Sleep",
+                                sleepGraphDataCSV.lightSleepMin,
+                                "min",
+                                "Light sleep duration"
+                            ].join(","));
+
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "REM Sleep",
+                                sleepGraphDataCSV.remSleepMin,
+                                "min",
+                                "REM sleep duration"
+                            ].join(","));
+
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Awake Time",
+                                sleepGraphDataCSV.awakeMin,
+                                "min",
+                                "Total awake time during sleep period"
+                            ].join(","));
+
+                            // Derived metrics
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Sleep Onset Latency",
+                                sleepGraphDataCSV.sleepOnsetLatencyMin,
+                                "min",
+                                "Time from bedtime to first sleep"
+                            ].join(","));
+
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "WASO",
+                                sleepGraphDataCSV.wasoMin,
+                                "min",
+                                "Wake After Sleep Onset"
+                            ].join(","));
+
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Wake Episodes",
+                                sleepGraphDataCSV.wakeEpisodes,
+                                "count",
+                                "Number of awakenings during sleep"
+                            ].join(","));
+
+                            // Total Sleep (Derived) - Deep + Light + REM
+                            const derivedHours = Math.floor(sleepGraphDataCSV.totalSleepDerivedMin / 60);
+                            const derivedMins = sleepGraphDataCSV.totalSleepDerivedMin % 60;
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Total Sleep (Derived)",
+                                `${derivedHours}h ${derivedMins}m`,
+                                "hours/min",
+                                "Deep + Light + REM from segments"
+                            ].join(","));
+
+                            csvRows.push([
+                                userEmail,
+                                date,
+                                "Total Sleep Derived (Minutes)",
+                                sleepGraphDataCSV.totalSleepDerivedMin,
+                                "min",
+                                "Deep + Light + REM from segments in minutes"
+                            ].join(","));
+
+                        }
                     } else if (!hasAnyData) {
                         // Handle empty Sleep objects - no data available
                         csvRows.push([
@@ -1691,9 +2062,10 @@
                         details = "Average Sleep HRV";
                         break;
                     case "steps":
-                        value = safeGet(metric, 'object.avg') || safeGet(metric, 'object.total') || safeGet(metric, 'object.value') || "N/A";
+                        // Use total (full day count) as primary
+                        value = safeGet(metric, 'object.total') || safeGet(metric, 'object.avg') || safeGet(metric, 'object.value') || "N/A";
                         unit = "Steps";
-                        details = safeGet(metric, 'object.subtitle') || safeGet(metric, 'object.title') || "";
+                        details = "Daily total (calendar day)";
                         break;
                     case "glucose":
                         // Handle glucose with values array or direct value
@@ -2115,14 +2487,18 @@
                         const sleepEfficiency = sleepEfficiencyMetric ? sleepEfficiencyMetric.value : null;
 
                         groupedData[key].metrics['Bedtime'] = bedtimeStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                        groupedData[key].metrics['Bedtime_Date'] = bedtimeStart.toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
+                        groupedData[key].metrics['Bedtime_Unix'] = safeGet(metric, 'object.bedtime_start');
                         groupedData[key].metrics['Wake_Time'] = bedtimeEnd.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                        groupedData[key].metrics['Wake_Date'] = bedtimeEnd.toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
+                        groupedData[key].metrics['Wake_Unix'] = safeGet(metric, 'object.bedtime_end');
                         groupedData[key].metrics['Time_In_Bed_HM'] = timeInBed.formatted;
                         groupedData[key].metrics['Time_In_Bed_Min'] = timeInBed.totalMinutes;
 
-                        // Total Sleep (if available)
+                        // Total Sleep - API value (if available)
                         if (totalSleep) {
-                            groupedData[key].metrics['Total_Sleep_HM'] = totalSleep.formatted;
-                            groupedData[key].metrics['Total_Sleep_Min'] = totalSleep.totalMinutes;
+                            groupedData[key].metrics['Total_Sleep_API_HM'] = totalSleep.formatted;
+                            groupedData[key].metrics['Total_Sleep_API_Min'] = totalSleep.totalMinutes;
                         }
 
                         // Sleep Efficiency (if available)
@@ -2143,7 +2519,35 @@
                             groupedData[key].metrics['Sleep_HRV_Min_MS'] = safeGet(metric, 'object.hrv_graph.gist_object.min', 'N/A');
                             groupedData[key].metrics['Sleep_HRV_Max_MS'] = safeGet(metric, 'object.hrv_graph.gist_object.max', 'N/A');
                         }
+
+                        // Derived sleep metrics from sleep_graph.data
+                        const sleepGraphDataWide = processSleepGraphData(safeGet(metric, 'object.sleep_graph.data'));
+                        if (sleepGraphDataWide.hasData) {
+                            groupedData[key].metrics['Deep_Sleep_Min'] = sleepGraphDataWide.deepSleepMin;
+                            groupedData[key].metrics['Light_Sleep_Min'] = sleepGraphDataWide.lightSleepMin;
+                            groupedData[key].metrics['REM_Sleep_Min'] = sleepGraphDataWide.remSleepMin;
+                            groupedData[key].metrics['Awake_Min'] = sleepGraphDataWide.awakeMin;
+                            groupedData[key].metrics['Sleep_Onset_Latency_Min'] = sleepGraphDataWide.sleepOnsetLatencyMin;
+                            groupedData[key].metrics['WASO_Min'] = sleepGraphDataWide.wasoMin;
+                            groupedData[key].metrics['Wake_Episodes'] = sleepGraphDataWide.wakeEpisodes;
+                            // Total Sleep - Derived (Deep + Light + REM)
+                            const derivedHours = Math.floor(sleepGraphDataWide.totalSleepDerivedMin / 60);
+                            const derivedMins = sleepGraphDataWide.totalSleepDerivedMin % 60;
+                            groupedData[key].metrics['Total_Sleep_Derived_HM'] = `${derivedHours}h ${derivedMins}m`;
+                            groupedData[key].metrics['Total_Sleep_Derived_Min'] = sleepGraphDataWide.totalSleepDerivedMin;
+                        }
                     }
+                } else if (metric.type === "steps") {
+                    // Handle steps separately to ensure proper column naming
+                    // Use total (full day count) as primary for steps
+                    const stepsValue = safeGet(metric, 'object.total') || safeGet(metric, 'object.avg') || safeGet(metric, 'object.value') || 'N/A';
+                    groupedData[key].metrics['Steps_Daily'] = stepsValue;
+                } else if (metric.type === "temp" || metric.type === "temperature") {
+                    // Handle temperature with proper fallback chain
+                    const tempValue = safeGet(metric, 'object.avg') ||
+                                     safeGet(metric, 'object.last_reading') ||
+                                     safeGet(metric, 'object.value') || 'N/A';
+                    groupedData[key].metrics['Temp_C'] = tempValue;
                 } else {
                     // Handle other metric types
                     const metricName = metric.type || 'Unknown';
@@ -2174,17 +2578,29 @@
                 if (a === 'Date') return -1;
                 if (b === 'Date') return 1;
                 
-                // Sort sleep metrics first, then others alphabetically
-                const sleepMetrics = ['Bedtime', 'Wake_Time', 'Time_In_Bed_HM', 'Time_In_Bed_Min', 'Total_Sleep_HM', 'Total_Sleep_Min', 'Sleep_Efficiency_Pct', 'Sleep_HR_Avg_BPM', 'Sleep_HR_Min_BPM', 'Sleep_HR_Max_BPM', 'Sleep_HRV_Avg_MS', 'Sleep_HRV_Min_MS', 'Sleep_HRV_Max_MS'];
+                // Sort sleep metrics first, then steps/temp, then others alphabetically
+                const sleepMetrics = [
+                    'Bedtime', 'Bedtime_Date', 'Bedtime_Unix',
+                    'Wake_Time', 'Wake_Date', 'Wake_Unix',
+                    'Time_In_Bed_HM', 'Time_In_Bed_Min',
+                    'Total_Sleep_API_HM', 'Total_Sleep_API_Min',
+                    'Total_Sleep_Derived_HM', 'Total_Sleep_Derived_Min',
+                    'Sleep_Efficiency_Pct',
+                    'Deep_Sleep_Min', 'Light_Sleep_Min', 'REM_Sleep_Min', 'Awake_Min',
+                    'Sleep_Onset_Latency_Min', 'WASO_Min', 'Wake_Episodes',
+                    'Sleep_HR_Avg_BPM', 'Sleep_HR_Min_BPM', 'Sleep_HR_Max_BPM',
+                    'Sleep_HRV_Avg_MS', 'Sleep_HRV_Min_MS', 'Sleep_HRV_Max_MS',
+                    'Steps_Daily', 'Temp_C'
+                ];
                 const aIsSleep = sleepMetrics.includes(a);
                 const bIsSleep = sleepMetrics.includes(b);
-                
+
                 if (aIsSleep && !bIsSleep) return -1;
                 if (!aIsSleep && bIsSleep) return 1;
                 if (aIsSleep && bIsSleep) {
                     return sleepMetrics.indexOf(a) - sleepMetrics.indexOf(b);
                 }
-                
+
                 return a.localeCompare(b);
             });
             
@@ -2264,6 +2680,46 @@
                             "Sleep end time"
                         ].join(","));
 
+                        // Bedtime Date
+                        csvRows.push([
+                            `"${userEmail}"`,
+                            date,
+                            "Bedtime Date",
+                            bedtimeStart.toLocaleDateString('en-CA'),
+                            "Date",
+                            "Calendar date of bedtime"
+                        ].join(","));
+
+                        // Wake Date
+                        csvRows.push([
+                            `"${userEmail}"`,
+                            date,
+                            "Wake Date",
+                            bedtimeEnd.toLocaleDateString('en-CA'),
+                            "Date",
+                            "Calendar date of wake time"
+                        ].join(","));
+
+                        // Bedtime Unix Timestamp
+                        csvRows.push([
+                            `"${userEmail}"`,
+                            date,
+                            "Bedtime Unix",
+                            safeGet(metric, 'object.bedtime_start'),
+                            "Unix",
+                            "Unix timestamp of bedtime (seconds)"
+                        ].join(","));
+
+                        // Wake Unix Timestamp
+                        csvRows.push([
+                            `"${userEmail}"`,
+                            date,
+                            "Wake Unix",
+                            safeGet(metric, 'object.bedtime_end'),
+                            "Unix",
+                            "Unix timestamp of wake time (seconds)"
+                        ].join(","));
+
                         // Time in Bed (formatted)
                         csvRows.push([
                             `"${userEmail}"`,
@@ -2284,24 +2740,24 @@
                             "Time in bed in minutes"
                         ].join(","));
 
-                        // Total Sleep (if available)
+                        // Total Sleep - API value (if available)
                         if (totalSleep) {
                             csvRows.push([
                                 `"${userEmail}"`,
                                 date,
-                                "Total Sleep",
+                                "Total Sleep (API)",
                                 totalSleep.formatted,
                                 "hours/min",
-                                "Actual sleep time"
+                                "From API quick_metrics"
                             ].join(","));
 
                             csvRows.push([
                                 `"${userEmail}"`,
                                 date,
-                                "Total Sleep (Minutes)",
+                                "Total Sleep API (Minutes)",
                                 totalSleep.totalMinutes,
                                 "min",
-                                "Actual sleep time in minutes"
+                                "From API quick_metrics in minutes"
                             ].join(","));
                         }
 
@@ -2340,19 +2796,119 @@
                                 `Min: ${safeGet(metric, 'object.hrv_graph.gist_object.min', 'N/A')} ms, Max: ${safeGet(metric, 'object.hrv_graph.gist_object.max', 'N/A')} ms`
                             ].join(","));
                         }
+
+                        // Derived sleep metrics from sleep_graph.data
+                        const sleepGraphDataMulti = processSleepGraphData(safeGet(metric, 'object.sleep_graph.data'));
+                        if (sleepGraphDataMulti.hasData) {
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Deep Sleep",
+                                sleepGraphDataMulti.deepSleepMin,
+                                "min",
+                                "Deep sleep duration"
+                            ].join(","));
+
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Light Sleep",
+                                sleepGraphDataMulti.lightSleepMin,
+                                "min",
+                                "Light sleep duration"
+                            ].join(","));
+
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "REM Sleep",
+                                sleepGraphDataMulti.remSleepMin,
+                                "min",
+                                "REM sleep duration"
+                            ].join(","));
+
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Awake Time",
+                                sleepGraphDataMulti.awakeMin,
+                                "min",
+                                "Total awake time during sleep period"
+                            ].join(","));
+
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Sleep Onset Latency",
+                                sleepGraphDataMulti.sleepOnsetLatencyMin,
+                                "min",
+                                "Time from bedtime to first sleep"
+                            ].join(","));
+
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "WASO",
+                                sleepGraphDataMulti.wasoMin,
+                                "min",
+                                "Wake After Sleep Onset"
+                            ].join(","));
+
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Wake Episodes",
+                                sleepGraphDataMulti.wakeEpisodes,
+                                "count",
+                                "Number of awakenings during sleep"
+                            ].join(","));
+
+                            // Total Sleep (Derived) - Deep + Light + REM
+                            const derivedHoursMulti = Math.floor(sleepGraphDataMulti.totalSleepDerivedMin / 60);
+                            const derivedMinsMulti = sleepGraphDataMulti.totalSleepDerivedMin % 60;
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Total Sleep (Derived)",
+                                `${derivedHoursMulti}h ${derivedMinsMulti}m`,
+                                "hours/min",
+                                "Deep + Light + REM from segments"
+                            ].join(","));
+
+                            csvRows.push([
+                                `"${userEmail}"`,
+                                date,
+                                "Total Sleep Derived (Minutes)",
+                                sleepGraphDataMulti.totalSleepDerivedMin,
+                                "min",
+                                "Deep + Light + REM from segments in minutes"
+                            ].join(","));
+
+                        }
                     }
+                } else if (metric.type === "steps") {
+                    // Handle steps with proper total value
+                    const stepsTotal = safeGet(metric, 'object.total') || safeGet(metric, 'object.avg') || safeGet(metric, 'object.value') || "N/A";
+                    csvRows.push([
+                        `"${userEmail}"`,
+                        date,
+                        "Steps (Daily)",
+                        stepsTotal,
+                        "Steps",
+                        "Daily total (calendar day)"
+                    ].join(","));
                 } else {
                     // Handle other metric types
                     let value = "N/A";
                     let unit = "";
                     let details = "";
-                    
+
                     if (metric.object) {
                         value = safeGet(metric, 'object.value', 'N/A');
                         unit = safeGet(metric, 'object.unit', '');
                         details = safeGet(metric, 'object.description', '');
                     }
-                    
+
                     csvRows.push([
                         `"${userEmail}"`,
                         date,
