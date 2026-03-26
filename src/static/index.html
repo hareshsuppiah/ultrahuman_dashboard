@@ -5,97 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultrahuman Device Dashboard</title>
     <style>
+        :root {
+            --bg-page: #fafafa;
+            --bg-card: #fff;
+            --bg-hover: #f8f9fa;
+            --bg-input: #fff;
+            --bg-stage: #f8f9fa;
+            --bg-tab: #f8f9fa;
+            --bg-btn-secondary: #f3f4f6;
+            --border: #e5e7eb;
+            --border-light: #eee;
+            --text-primary: #1a1a1a;
+            --text-secondary: #333;
+            --text-muted: #6b7280;
+            --text-btn-secondary: #374151;
+            --shadow: rgba(0,0,0,0.08);
+            --shadow-hover: rgba(0,0,0,0.08);
+            --input-border: #d1d5db;
+            --input-focus-shadow: rgba(26, 26, 26, 0.1);
+        }
+        body.dark-mode {
+            --bg-page: #111827;
+            --bg-card: #1f2937;
+            --bg-hover: #374151;
+            --bg-input: #374151;
+            --bg-stage: #374151;
+            --bg-tab: #1f2937;
+            --bg-btn-secondary: #374151;
+            --border: #374151;
+            --border-light: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #e5e7eb;
+            --text-muted: #9ca3af;
+            --text-btn-secondary: #e5e7eb;
+            --shadow: rgba(0,0,0,0.3);
+            --shadow-hover: rgba(0,0,0,0.4);
+            --input-border: #4b5563;
+            --input-focus-shadow: rgba(255, 255, 255, 0.1);
+        }
         * { box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background-color: #fafafa; 
-            color: #333; 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-page);
+            color: var(--text-secondary);
             line-height: 1.6;
+            transition: background-color 0.2s, color 0.2s;
         } 
-        .container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            background-color: #fff; 
-            border-radius: 12px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08); 
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px var(--shadow);
             overflow: hidden;
         } 
-        .section { 
-            padding: 32px; 
-            border-bottom: 1px solid #eee; 
-        } 
+        .section {
+            padding: 32px;
+            border-bottom: 1px solid var(--border-light);
+        }
         .section:last-child { border-bottom: none; }
-        h1 { 
-            text-align: center; 
-            color: #1a1a1a; 
+        h1 {
+            text-align: center;
+            color: var(--text-primary); 
             margin: 0 0 8px 0; 
             font-size: 2.25rem; 
             font-weight: 700; 
             letter-spacing: -0.025em;
         } 
-        h2 { 
-            margin: 0 0 24px 0; 
-            color: #1a1a1a; 
+        h2 {
+            margin: 0 0 24px 0;
+            color: var(--text-primary); 
             font-size: 1.5rem; 
             font-weight: 600; 
-            border-bottom: 2px solid #1a1a1a; 
+            border-bottom: 2px solid var(--text-primary);
             padding-bottom: 8px;
-        } 
-        h3 { 
-            color: #1a1a1a; 
+        }
+        h3 {
+            color: var(--text-primary); 
             margin: 0 0 12px 0; 
             font-size: 1.125rem; 
             font-weight: 600;
         } 
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 24px 0; 
-            background: #fff;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            background: var(--bg-card);
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         } 
-        th, td { 
-            padding: 12px 16px; 
-            text-align: left; 
-            border-bottom: 1px solid #eee; 
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light); 
             word-break: break-all; 
         } 
-        th { 
-            background-color: #f8f9fa; 
-            font-weight: 600; 
-            color: #1a1a1a;
+        th {
+            background-color: var(--bg-hover);
+            font-weight: 600;
+            color: var(--text-primary);
             font-size: 0.875rem;
             text-transform: uppercase;
             letter-spacing: 0.025em;
         } 
-        tr:hover { background-color: #f8f9fa; } 
+        tr:hover { background-color: var(--bg-hover); } 
         .form-group { 
             margin-bottom: 24px; 
         } 
-        label { 
-            display: block; 
-            margin-bottom: 8px; 
-            font-weight: 500; 
-            color: #1a1a1a; 
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary); 
             font-size: 0.875rem;
         } 
-        input[type="text"], input[type="email"], input[type="date"], select { 
-            width: 100%; 
-            padding: 12px 16px; 
-            border: 1px solid #d1d5db; 
-            border-radius: 6px; 
+        input[type="text"], input[type="email"], input[type="date"], select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
             font-size: 0.875rem;
             transition: border-color 0.15s ease;
-            background: #fff;
-        } 
-        input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, select:focus { 
-            outline: none; 
-            border-color: #1a1a1a; 
-            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
+            background: var(--bg-input);
+            color: var(--text-secondary);
+        }
+        input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, select:focus {
+            outline: none;
+            border-color: var(--text-primary);
+            box-shadow: 0 0 0 3px var(--input-focus-shadow);
         }
         .radio-group {
             display: flex;
@@ -116,10 +156,10 @@
             margin: 0;
             cursor: pointer;
             font-weight: 500;
-            color: #6b7280;
+            color: var(--text-muted);
         }
         .radio-option input[type="radio"]:checked + label {
-            color: #1a1a1a;
+            color: var(--text-primary);
         }
         .button-group {
             display: flex;
@@ -151,14 +191,14 @@
             transform: none;
             box-shadow: none;
         }
-        button.secondary { 
-            background-color: #f3f4f6; 
-            color: #374151; 
-            border: 1px solid #d1d5db;
-        } 
-        button.secondary:hover { 
-            background-color: #e5e7eb; 
-            color: #1f2937;
+        button.secondary {
+            background-color: var(--bg-btn-secondary);
+            color: var(--text-btn-secondary);
+            border: 1px solid var(--input-border);
+        }
+        button.secondary:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
         } 
         button.danger { 
             background-color: #ef4444; 
@@ -192,46 +232,46 @@
             gap: 20px; 
             margin-top: 24px;
         } 
-        .metric-card { 
-            border: 1px solid #e5e7eb; 
-            padding: 24px; 
-            border-radius: 12px; 
-            background-color: #fff; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04); 
+        .metric-card {
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 12px;
+            background-color: var(--bg-card); 
+            box-shadow: 0 1px 3px var(--shadow);
             max-height: 500px; 
             overflow-y: auto;
             transition: box-shadow 0.15s ease;
         } 
         .metric-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 12px var(--shadow-hover);
         }
-        .metric-card h3 { 
-            margin: 0 0 16px 0; 
-            font-size: 1rem; 
-            color: #1a1a1a; 
-            border-bottom: 1px solid #e5e7eb; 
+        .metric-card h3 {
+            margin: 0 0 16px 0;
+            font-size: 1rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border); 
             padding-bottom: 8px; 
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.025em;
             font-size: 0.875rem;
         } 
-        .metric-value { 
-            font-size: 2rem; 
-            font-weight: 700; 
-            margin-bottom: 8px; 
-            color: #1a1a1a; 
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary); 
             line-height: 1;
         } 
-        .metric-unit { 
-            font-size: 0.875rem; 
-            color: #6b7280; 
+        .metric-unit {
+            font-size: 0.875rem;
+            color: var(--text-muted); 
             margin-left: 8px; 
             font-weight: 500;
         } 
         .metric-details {
             font-size: 0.875rem;
-            color: #6b7280;
+            color: var(--text-muted);
             margin: 8px 0;
         }
         .stages-grid {
@@ -243,12 +283,12 @@
             display: flex;
             flex-direction: column;
             padding: 12px;
-            background-color: #f8f9fa;
+            background-color: var(--bg-stage);
             border-radius: 8px;
         }
         .stage-label {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.025em;
             margin-bottom: 4px;
@@ -256,7 +296,7 @@
         .stage-value {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #1a1a1a;
+            color: var(--text-primary);
         }
         canvas {
             max-width: 100%;
@@ -329,8 +369,8 @@
         /* Tab Navigation Styles */
         .tabs {
             display: flex;
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #e5e7eb;
+            background-color: var(--bg-tab);
+            border-bottom: 2px solid var(--border);
             margin: 0;
             padding: 0;
         }
@@ -340,7 +380,7 @@
             background: none;
             border: none;
             border-radius: 0;
-            color: #6b7280;
+            color: var(--text-muted);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -349,8 +389,8 @@
             transform: none;
         }
         .tab-button:hover {
-            background-color: #f3f4f6;
-            color: #1a1a1a;
+            background-color: var(--bg-btn-secondary);
+            color: var(--text-primary);
             transform: none;
             box-shadow: none;
         }
@@ -421,10 +461,32 @@
             gap: 16px;
         }
         .hidden { display: none !important; }
+        /* Dark mode toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            background: var(--bg-btn-secondary);
+            border: 1px solid var(--input-border);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            z-index: 10;
+        }
+        .theme-toggle:hover {
+            background: var(--bg-hover);
+            transform: none;
+            box-shadow: none;
+        }
+        .container { position: relative; }
     </style>
 </head>
 <body>
     <div class="container">
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleDarkMode()">Dark Mode</button>
         <h1>Ultrahuman Ring Device Dashboard</h1>
         
         <!-- Tab Navigation -->
@@ -624,6 +686,24 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
     <script>
+        // --- Dark Mode ---
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+            document.getElementById('theme-toggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+        // Apply saved preference or system preference
+        (function() {
+            const saved = localStorage.getItem('darkMode');
+            if (saved === 'true' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.add('dark-mode');
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.getElementById('theme-toggle').textContent = 'Light Mode';
+                });
+            }
+        })();
+
         const userApiUrl = "/api/users"; // Relative path prefix
         const metricsApiUrlBase = "/api/metrics"; // Relative path prefix
         
@@ -1426,12 +1506,24 @@
                         let totalSolMin = 0, totalWasoMin = 0, totalWakeEpisodes = 0, totalTotalSleepDerivedMin = 0;
                         let validSleepGraphCount = 0;
 
+                        // Per-night arrays for statistical summaries
+                        const nightlyTimeInBed = [];
+                        const nightlyTotalSleep = [];
+                        const nightlyEfficiency = [];
+                        const nightlyHR = [];
+                        const nightlyHRV = [];
+                        const nightlySOL = [];
+                        const nightlyWASO = [];
+                        const nightlyWakeEp = [];
+                        const nightlySleepGraphs = [];
+
                         metrics.forEach(m => {
                             const hasValidSleepData = safeGet(m, 'object.bedtime_start') && safeGet(m, 'object.bedtime_end');
                             if (hasValidSleepData) {
                                 const timeInBedSeconds = safeGet(m, 'object.bedtime_end') - safeGet(m, 'object.bedtime_start');
                                 totalTimeInBedSeconds += timeInBedSeconds;
                                 validTimeInBedCount++;
+                                nightlyTimeInBed.push(Math.round(timeInBedSeconds / 60));
 
                                 // Collect bedtimes and wake times for consistency analysis
                                 const bedtime = new Date(safeGet(m, 'object.bedtime_start') * 1000);
@@ -1446,6 +1538,7 @@
                             if (totalSleepMetric && totalSleepMetric.value) {
                                 totalActualSleepSeconds += totalSleepMetric.value;
                                 validActualSleepCount++;
+                                nightlyTotalSleep.push(Math.round(totalSleepMetric.value / 60));
                             }
 
                             // Get sleep efficiency from quick_metrics
@@ -1453,6 +1546,7 @@
                             if (sleepEfficiencyMetric && sleepEfficiencyMetric.value !== null) {
                                 totalSleepEfficiency += sleepEfficiencyMetric.value;
                                 validEfficiencyCount++;
+                                nightlyEfficiency.push(sleepEfficiencyMetric.value);
                             }
 
                             // Handle HR data from multiple possible locations
@@ -1465,6 +1559,7 @@
                             if (hrValue) {
                                 totalHR += hrValue;
                                 validHRCount++;
+                                nightlyHR.push(hrValue);
                             }
 
                             // Handle HRV data from multiple possible locations
@@ -1477,6 +1572,7 @@
                             if (hrvValue) {
                                 totalHRV += hrvValue;
                                 validHRVCount++;
+                                nightlyHRV.push(hrvValue);
                             }
 
                             // Process derived sleep metrics from sleep_graph.data
@@ -1491,6 +1587,10 @@
                                 totalWakeEpisodes += sleepGraphDataForAgg.wakeEpisodes;
                                 totalTotalSleepDerivedMin += sleepGraphDataForAgg.totalSleepDerivedMin;
                                 validSleepGraphCount++;
+                                nightlySOL.push(sleepGraphDataForAgg.sleepOnsetLatencyMin);
+                                nightlyWASO.push(sleepGraphDataForAgg.wasoMin);
+                                nightlyWakeEp.push(sleepGraphDataForAgg.wakeEpisodes);
+                                nightlySleepGraphs.push({ date: m.date, data: safeGet(m, 'object.sleep_graph.data') });
                             }
                         });
 
@@ -1662,6 +1762,45 @@
                                 <p class="metric-details">Average awakenings during sleep</p>
                             `;
                             metricsDisplay.appendChild(wakeEpisodesCard);
+
+                            // Statistical Summary Card
+                            if (nightlyTotalSleep.length >= 2) {
+                                const statsCard = document.createElement("div");
+                                statsCard.className = "metric-card";
+                                statsCard.style.gridColumn = "1 / -1";
+                                const sleepStats = computeStats(nightlyTotalSleep);
+                                const hrStats = computeStats(nightlyHR);
+                                const hrvStats = computeStats(nightlyHRV);
+                                const effStats = computeStats(nightlyEfficiency);
+                                const solStats = computeStats(nightlySOL);
+                                const wasoStats = computeStats(nightlyWASO);
+
+                                let statsHtml = `<h3>STATISTICAL SUMMARY (${dateRange.length} days)</h3>`;
+                                if (sleepStats) statsHtml += `<p class="metric-details" style="font-weight:600;margin-top:12px;">Total Sleep (min)</p>` + formatStatsSummary(sleepStats, 'min');
+                                if (effStats) statsHtml += `<p class="metric-details" style="font-weight:600;margin-top:12px;">Sleep Efficiency (%)</p>` + formatStatsSummary(effStats, '%', 1);
+                                if (hrStats) statsHtml += `<p class="metric-details" style="font-weight:600;margin-top:12px;">Sleep Heart Rate (BPM)</p>` + formatStatsSummary(hrStats, 'BPM', 1);
+                                if (hrvStats) statsHtml += `<p class="metric-details" style="font-weight:600;margin-top:12px;">Sleep HRV (ms)</p>` + formatStatsSummary(hrvStats, 'ms', 1);
+                                if (solStats) statsHtml += `<p class="metric-details" style="font-weight:600;margin-top:12px;">Sleep Onset Latency (min)</p>` + formatStatsSummary(solStats, 'min');
+                                if (wasoStats) statsHtml += `<p class="metric-details" style="font-weight:600;margin-top:12px;">WASO (min)</p>` + formatStatsSummary(wasoStats, 'min');
+
+                                statsCard.innerHTML = statsHtml;
+                                metricsDisplay.appendChild(statsCard);
+                            }
+
+                            // Sleep Stage Heatmap
+                            if (nightlySleepGraphs.length >= 2) {
+                                const heatmapCard = document.createElement("div");
+                                heatmapCard.className = "metric-card";
+                                heatmapCard.style.gridColumn = "1 / -1";
+                                const heatmapCanvasId = `heatmap-${Date.now()}`;
+                                heatmapCard.innerHTML = `
+                                    <h3>SLEEP ARCHITECTURE HEATMAP</h3>
+                                    <p class="metric-details">Sleep stage patterns across nights (each row is one night)</p>
+                                    <canvas id="${heatmapCanvasId}" style="width:100%;margin-top:12px;"></canvas>
+                                `;
+                                metricsDisplay.appendChild(heatmapCard);
+                                setTimeout(() => renderSleepHeatmap(heatmapCanvasId, nightlySleepGraphs), 0);
+                            }
 
                         }
 
@@ -2352,6 +2491,139 @@
                     }
                 }
             });
+        }
+
+        // --- Sleep Heatmap ---
+        function renderSleepHeatmap(canvasId, nightlyData) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || nightlyData.length === 0) return;
+            const ctx = canvas.getContext('2d');
+
+            const stageColours = {
+                'deep_sleep': '#0d6efd',
+                'light_sleep': '#6c757d',
+                'rem_sleep': '#198754',
+                'awake': '#ffc107'
+            };
+            const bgColour = getComputedStyle(document.body).getPropertyValue('--bg-card').trim() || '#fff';
+
+            // Determine time range: 30-min bins from earliest bedtime to latest wake
+            const binMinutes = 30;
+            let globalStart = Infinity, globalEnd = -Infinity;
+            nightlyData.forEach(night => {
+                if (!night.data || night.data.length === 0) return;
+                const s = night.data[0].start;
+                const e = night.data[night.data.length - 1].end;
+                if (s < globalStart) globalStart = s;
+                if (e > globalEnd) globalEnd = e;
+            });
+
+            // Normalise all nights relative to first segment start
+            // Use hours offset from each night's own start
+            const maxDurationSec = globalEnd - globalStart;
+            const numBins = Math.min(Math.ceil(maxDurationSec / (binMinutes * 60)), 48); // cap at 24h
+            const rowHeight = 28;
+            const labelWidth = 80;
+            const rows = nightlyData.length;
+
+            canvas.width = canvas.parentElement.clientWidth || 800;
+            canvas.height = rows * rowHeight + 40;
+            canvas.style.height = canvas.height + 'px';
+
+            const chartWidth = canvas.width - labelWidth - 10;
+            const binWidth = chartWidth / numBins;
+
+            // Draw
+            nightlyData.forEach((night, rowIdx) => {
+                if (!night.data || night.data.length === 0) return;
+                const nightStart = night.data[0].start;
+                const nightEnd = night.data[night.data.length - 1].end;
+                const nightDuration = nightEnd - nightStart;
+
+                // Date label
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted').trim() || '#6b7280';
+                ctx.font = '11px -apple-system, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(night.date, labelWidth - 8, rowIdx * rowHeight + rowHeight / 2 + 20);
+
+                // Draw bins
+                for (let bin = 0; bin < numBins; bin++) {
+                    const binStartSec = nightStart + bin * binMinutes * 60;
+                    const binEndSec = binStartSec + binMinutes * 60;
+                    const binMidSec = (binStartSec + binEndSec) / 2;
+
+                    // Find which segment contains the bin midpoint
+                    let stage = null;
+                    for (const seg of night.data) {
+                        if (binMidSec >= seg.start && binMidSec < seg.end) {
+                            stage = seg.type;
+                            break;
+                        }
+                    }
+
+                    const x = labelWidth + bin * binWidth;
+                    const y = rowIdx * rowHeight + 20;
+
+                    if (stage && stageColours[stage]) {
+                        ctx.fillStyle = stageColours[stage];
+                    } else {
+                        ctx.fillStyle = bgColour;
+                    }
+                    ctx.fillRect(x, y, binWidth + 0.5, rowHeight - 2);
+                }
+            });
+
+            // Legend
+            const legendY = rows * rowHeight + 26;
+            const stages = [['Deep', '#0d6efd'], ['Light', '#6c757d'], ['REM', '#198754'], ['Awake', '#ffc107']];
+            let legendX = labelWidth;
+            stages.forEach(([label, colour]) => {
+                ctx.fillStyle = colour;
+                ctx.fillRect(legendX, legendY, 14, 10);
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted').trim() || '#6b7280';
+                ctx.font = '10px -apple-system, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(label, legendX + 18, legendY + 8);
+                legendX += 70;
+            });
+        }
+
+        // --- Statistical Summary Helper ---
+        function computeStats(values) {
+            if (!values || values.length === 0) return null;
+            const n = values.length;
+            const sorted = [...values].sort((a, b) => a - b);
+            const mean = values.reduce((s, v) => s + v, 0) / n;
+            const median = n % 2 === 0 ? (sorted[n/2 - 1] + sorted[n/2]) / 2 : sorted[Math.floor(n/2)];
+            const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / (n > 1 ? n - 1 : 1);
+            const sd = Math.sqrt(variance);
+            const min = sorted[0];
+            const max = sorted[n - 1];
+
+            // Simple linear trend (slope direction)
+            let trend = 'stable';
+            if (n >= 3) {
+                const xMean = (n - 1) / 2;
+                let num = 0, den = 0;
+                values.forEach((v, i) => { num += (i - xMean) * (v - mean); den += (i - xMean) ** 2; });
+                const slope = den !== 0 ? num / den : 0;
+                const relSlope = mean !== 0 ? Math.abs(slope / mean) : 0;
+                if (relSlope > 0.02) trend = slope > 0 ? 'increasing' : 'decreasing';
+            }
+
+            return { mean, median, sd, min, max, n, trend };
+        }
+
+        function formatStatsSummary(stats, unit, decimals = 0) {
+            if (!stats) return '';
+            const trendIcon = stats.trend === 'increasing' ? '&#8599;' : stats.trend === 'decreasing' ? '&#8600;' : '&#8596;';
+            return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;">
+                <div class="stage-item"><span class="stage-label">Median</span><span class="stage-value">${stats.median.toFixed(decimals)} ${unit}</span></div>
+                <div class="stage-item"><span class="stage-label">SD</span><span class="stage-value">${stats.sd.toFixed(decimals)} ${unit}</span></div>
+                <div class="stage-item"><span class="stage-label">Range</span><span class="stage-value">${stats.min.toFixed(decimals)} - ${stats.max.toFixed(decimals)}</span></div>
+            </div>
+            <p class="metric-details" style="margin-top:8px;">Trend: ${trendIcon} ${stats.trend} (n=${stats.n})</p>`;
         }
 
         // --- Date Preset Function ---

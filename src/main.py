@@ -35,5 +35,10 @@ def serve(path):
             return "index.html not found", 404
 
 
-if __name__ == '__main__':
+def run():
+    """Entry point for the ultrahuman-dashboard console script."""
     app.run(host='0.0.0.0', port=8000, debug=True)
+
+
+if __name__ == '__main__':
+    run()
