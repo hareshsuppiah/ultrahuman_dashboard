@@ -11,13 +11,13 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.email}>'
 
-    def serialize(self):
-        return {
+    def serialize(self, include_credentials=False):
+        data = {
             'id': self.id,
             'email': self.email,
-            # Note: Returning api_key and access_code directly might be a security risk depending on usage.
-            # Consider if these should be exposed via the API.
-            'api_key': self.api_key,
-            'access_code': self.access_code
         }
+        if include_credentials:
+            data['api_key'] = self.api_key
+            data['access_code'] = self.access_code
+        return data
 

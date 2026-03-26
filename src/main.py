@@ -9,7 +9,7 @@ from src.routes.user import user_bp
 from src.routes.metrics import metrics_bp
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-only-change-in-production')
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(metrics_bp, url_prefix='/api')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.dirname(os.path.dirname(__file__)), 'database.db')

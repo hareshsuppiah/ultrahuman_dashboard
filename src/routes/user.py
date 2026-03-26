@@ -19,19 +19,19 @@ def add_user():
     )
     db.session.add(new_user)
     db.session.commit()
-    return jsonify(new_user.serialize()), 201
+    return jsonify(new_user.serialize(include_credentials=True)), 201
 
 @user_bp.route("/users", methods=["GET"])
 def get_users():
     users = User.query.all()
-    return jsonify([user.serialize() for user in users])
+    return jsonify([user.serialize(include_credentials=True) for user in users])
 
 @user_bp.route("/users/<int:user_id>", methods=["GET"])
 def get_user(user_id):
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
-    return jsonify(user.serialize())
+    return jsonify(user.serialize(include_credentials=True))
 
 @user_bp.route("/users/<int:user_id>", methods=["PUT"])
 def update_user(user_id):
@@ -53,7 +53,7 @@ def update_user(user_id):
     user.access_code = data.get("access_code", user.access_code)
 
     db.session.commit()
-    return jsonify(user.serialize())
+    return jsonify(user.serialize(include_credentials=True))
 
 @user_bp.route("/users/<int:user_id>", methods=["DELETE"])
 def delete_user(user_id):

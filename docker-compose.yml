@@ -1,0 +1,9 @@
+services:
+  dashboard:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./database.db:/app/database.db
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-dev-only-change-in-production}
