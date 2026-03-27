@@ -1453,8 +1453,12 @@
                         if (safeGet(metric, 'object.title')) content += `<p class="metric-details">(${safeGet(metric, 'object.title')})</p>`;
                         break;
                     default:
-                        content += `<p class="metric-details">Data structure not fully recognized for type: ${metric.type}</p>`;
-                        content += `<pre>${JSON.stringify(metric.object, null, 2)}</pre>`; // Show raw data for unrecognized types
+                        // Handle any metric type with a title/value/unit structure
+                        const defaultValue = safeGet(metric, 'object.value') ?? safeGet(metric, 'object.score') ?? safeGet(metric, 'object.avg') ?? "N/A";
+                        const defaultUnit = safeGet(metric, 'object.unit') || "";
+                        const defaultTitle = safeGet(metric, 'object.title') || metric.type.replace(/_/g, ' ');
+                        content += `<div class="metric-value">${defaultValue} <span class="metric-unit">${defaultUnit}</span></div>`;
+                        content += `<p class="metric-details">${defaultTitle}</p>`;
                 }
 
                 card.innerHTML = content;
