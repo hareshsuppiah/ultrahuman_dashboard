@@ -1,10 +1,10 @@
 # Ultrahuman Dashboard
 
-A comprehensive Python web dashboard for visualising and analysing your Ultrahuman ring data locally. Get detailed insights into your sleep, heart rate, HRV, glucose levels, and more!
+A Python web dashboard for visualising and analysing Ultrahuman Ring data locally. View sleep patterns, heart rate, HRV, glucose levels, skin temperature, and daily activity through an interactive web interface.
 
 ## How to Cite
 
-If you use this dashboard in your research or find it helpful, please cite it using the information below:
+If you use this dashboard in your research, please cite it:
 
 ### APA Style
 ```
@@ -23,401 +23,132 @@ Suppiah, H., & Driller, M. (2025). Ultrahuman Ring Health Monitoring Dashboard a
 }
 ```
 
-### Citation File
-This repository includes a `CITATION.cff` file for easy citation management. GitHub will automatically generate citation formats from this file.
+This repository includes a `CITATION.cff` file for automatic citation generation on GitHub.
 
 ---
 
-## Table of Contents
-
-- [📊 Dashboard Preview](#-dashboard-preview)
-- [🎯 What This Project Does](#-what-this-project-does)
-- [🚀 Getting Started](#-getting-started)
-  - [For Mac Users](#for-mac-users)
-  - [For Windows Users](#for-windows-users)
-- [🗄️ Database Setup](#️-database-setup)
-- [📖 How to Use the Dashboard](#-how-to-use-the-dashboard)
-  - [User Management](#1-user-management-tab)
-  - [Single User Dashboard](#2-single-user-dashboard-tab)
-  - [Multi-User Export](#3-multi-user-export-tab)
-- [📈 Understanding Your Data](#-understanding-your-data)
-- [🔬 Technical Notes for Researchers](#-technical-notes-for-researchers)
-- [⚡ Daily Usage](#-daily-usage)
-- [📁 Project Structure](#-project-structure)
-- [🔧 Troubleshooting](#-troubleshooting)
-- [🔒 Privacy & Security](#-privacy--security)
-- [✨ Features Overview](#-features-overview)
-- [💬 Support](#-support)
-- [📄 Licence](#-licence)
-
----
-
-## 📊 Dashboard Preview
+## Dashboard Preview
 
 ![Ultrahuman Dashboard Screenshot](assets/images/dashboard-screenshot.png)
 
 ---
 
-## 🎯 What This Project Does
+## Features
 
-This dashboard provides:
-- **Comprehensive Health Analytics**: Sleep patterns, heart rate, HRV, glucose monitoring, and more
-- **Advanced Sleep Tracking**: Separate cards for bedtime, wake time, duration, sleep HR, and sleep HRV
-- **Interactive Charts**: Real-time visualisations of your health metrics with zoom and pan capabilities
-- **Tabbed Interface**: Clean navigation between User Management, Single User Dashboard, and Multi-User Export
-- **Dual Export Formats**: Choose between Long Format (detailed) or Wide Format (spreadsheet-friendly)
-- **Multi-User Export**: Bulk CSV export for multiple users across date ranges
-- **Multi-Day Analysis**: Compare trends across date ranges
-- **Privacy-First**: All data stays local on your machine
-
-### Key Features Shown in Dashboard:
-- **Heart Rate Monitoring**: Real-time BPM tracking with interactive charts
-- **Skin Temperature**: Continuous temperature monitoring throughout the day  
-- **HRV Analysis**: Heart Rate Variability metrics with trend analysis
-- **Export Options**: Both Long and Wide format CSV exports available
-- **Date Selection**: Single day or date range analysis modes
+- Sleep stage analysis with hypnogram visualisation
+- Derived sleep metrics: SOL, WASO, wake episodes (from raw API segments)
+- Circular mean algorithm for bedtime/wake time averaging across midnight
+- Heart rate and HRV tracking with interactive charts
+- Glucose, skin temperature, and daily steps monitoring
+- Dual CSV export formats (long and wide)
+- Multi-user bulk export across date ranges
+- Multi-day statistical summaries (median, SD, range, trend)
+- Sleep architecture heatmap for multi-night comparison
+- Dark mode
+- Date range presets (7, 14, 30 days)
+- All data processing occurs locally
 
 ---
 
-## 🚀 Getting Started
+## Installation
 
-This guide provides step-by-step installation instructions for users new to Python development.
+### Option A: pip install
 
-### Step 1: Download the Project
+```bash
+pip install ultrahuman-dashboard
+ultrahuman-dashboard
+```
 
-**Option A: Using GitHub (Recommended)**
-1. Go to: https://github.com/hareshsuppiah/ultrahuman_dashboard
-2. Click the green **"Code"** button
-3. Click **"Download ZIP"**
-4. Extract the ZIP file to your Desktop or Documents folder
+Then open http://localhost:8000 in your browser.
 
-**Option B: Using Git (if you have it)**
+### Option B: From source
+
 ```bash
 git clone https://github.com/hareshsuppiah/ultrahuman_dashboard.git
+cd ultrahuman_dashboard
+python3 -m venv venv
+source venv/bin/activate    # Mac/Linux
+venv\Scripts\activate       # Windows
+pip install -r requirements.txt
+python src/main.py
 ```
 
-### Step 2: Install Python and Set Up the Dashboard
+Then open http://localhost:8000 in your browser.
 
-Choose your operating system:
+### Option C: Docker
 
-## For Mac Users
-
-### Install Python
-
-1. **Check if Python is already installed:**
-   - Open **Terminal** (press `Cmd + Space`, type "Terminal", press Enter)
-   - Type: `python3 --version`
-   - If you see a version number like `Python 3.9.7`, you're good! Skip to Step 2.
-
-2. **Install Python (choose ONE method):**
-
-   **Method A: Using Homebrew (Recommended)**
-   ```bash
-   # Install Homebrew first (if you don't have it)
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   
-   # Then install Python
-   brew install python
-   ```
-
-   **Method B: Download from Python.org**
-   - Go to [python.org/downloads](https://www.python.org/downloads/)
-   - Download the latest Python 3.x version for macOS
-   - Double-click the installer and follow the prompts
-
-### Set Up the Dashboard
-
-1. **Open Terminal and navigate to your project folder:**
-   ```bash
-   cd ~/Desktop/ultrahuman_dashboard-main
-   # (adjust the path based on where you extracted the files)
-   ```
-
-2. **Create a virtual environment:**
-   ```bash
-   python3 -m venv venv
-   ```
-
-3. **Activate the virtual environment:**
-   ```bash
-   source venv/bin/activate
-   ```
-   You should see `(venv)` at the beginning of your terminal prompt.
-
-4. **Install required packages:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-5. **Run the dashboard:**
-   ```bash
-   python src/main.py
-   ```
-
-6. **Open your web browser and go to:**
-   ```
-   http://localhost:8000
-   ```
-
-## For Windows Users
-
-### Install Python
-
-1. **Check if Python is already installed:**
-   - Press `Win + R`, type `cmd`, press Enter to open Command Prompt
-   - Type: `python --version`
-   - If you see a version number, skip to Step 2.
-
-2. **Install Python:**
-   - Go to [python.org/downloads](https://www.python.org/downloads/)
-   - Download the latest Python 3.x version for Windows
-   - Run the installer
-   - **Important:** Check "Add Python to PATH" during installation
-   - Click **"Install Now"**
-   - Restart your computer after installation
-
-### Set Up the Dashboard
-
-1. **Open Command Prompt:**
-   - Press `Win + R`, type `cmd`, press Enter
-   - Or press `Win + X` and select "Command Prompt"
-
-2. **Navigate to your project folder:**
-   ```cmd
-   cd C:\Users\YourName\Desktop\ultrahuman_dashboard-main
-   # (adjust the path based on where you extracted the files)
-   ```
-
-3. **Create a virtual environment:**
-   ```cmd
-   python -m venv venv
-   ```
-
-4. **Activate the virtual environment:**
-   ```cmd
-   venv\Scripts\activate
-   ```
-   You should see `(venv)` at the beginning of your prompt.
-
-5. **Install required packages:**
-   ```cmd
-   pip install -r requirements.txt
-   ```
-
-6. **Run the dashboard:**
-   ```cmd
-   python src/main.py
-   ```
-
-7. **Open your web browser and go to:**
-   ```
-   http://localhost:8000
-   ```
-
-### Step 3: First Time Setup
-
-Continue to the sections below for database setup and adding your Ultrahuman credentials.
-
----
-
-## 🗄️ Database Setup
-
-The database is created automatically when you first run the application.
-
-When you run `python src/main.py` for the first time, the application will:
-
-1. Create `database.db` in your project folder
-2. Set up the user table with the following structure:
-   - `id`: Unique identifier for each user
-   - `email`: Your Ultrahuman account email
-   - `api_key`: Your Ultrahuman API key
-   - `access_code`: Your Ultrahuman access code
-
-### Database Details
-
-**File Location:** `ultrahuman_dashboard/database.db`
-
-**Structure Created Automatically:**
-```sql
-CREATE TABLE user (
-    id INTEGER PRIMARY KEY,
-    email VARCHAR(120) UNIQUE NOT NULL,
-    api_key VARCHAR(120) NOT NULL,
-    access_code VARCHAR(120) NOT NULL
-);
-```
-
-**Key Points:**
-- No manual database setup required
-- Database file is created on first run
-- Your data stays completely local
-- Database file is automatically excluded from GitHub
-
-### Database Management
-
-**If you need to reset your database:**
-1. **Stop the dashboard** (Ctrl + C in terminal)
-2. **Delete the database file:**
-   ```bash
-   rm database.db  # Mac/Linux
-   del database.db # Windows
-   ```
-3. **Restart the dashboard** - a fresh database will be created automatically
-
-**If you want to backup your database:**
 ```bash
-cp database.db database_backup.db  # Mac/Linux
-copy database.db database_backup.db # Windows
+docker compose up
 ```
 
-### Getting Your Ultrahuman API Credentials
+### Requirements
 
-1. **Contact Ultrahuman Support** to request Partnership API access
-2. You'll need:
-   - Your email address
-   - API Key (long string starting with "eyJ...")
-   - Access Code (short code like "ABCD1234")
-
-### Adding Your Credentials
-
-1. Start the dashboard for the first time:
-   ```bash
-   python src/main.py
-   ```
-   The database.db file will be created automatically.
-
-2. Open the dashboard in your browser: http://localhost:8000
-
-3. Click "Add New User"
-
-4. Enter your information:
-   - Email: Your Ultrahuman account email
-   - API Key: The long key you received
-   - Access Code: The short code you received
-
-5. Click "Save User"
-
-Your credentials are now securely stored in your local database and you can begin viewing your data.
+- Python 3.8 or later
+- Ultrahuman Partnership API credentials (contact Ultrahuman Support to request access)
 
 ---
 
-## 📖 How to Use the Dashboard
+## Database Setup
 
-The dashboard features three main tabs:
+The database (`database.db`) is created automatically on first run. No manual setup is required.
 
-### 1. User Management Tab
-- **Add new users** with their Ultrahuman API credentials
-- **Edit existing users** to update credentials
-- **Delete users** when no longer needed
-- **View all registered users** in a clean table format
+The SQLite database stores user credentials locally:
 
-### 2. Single User Dashboard Tab
-#### Viewing Your Data
-1. **Select yourself** from the user dropdown
-2. **Choose your view:**
-   - **Single Day**: See detailed metrics for one specific day
-   - **Date Range**: Compare trends across multiple days (up to 30 days)
-3. **Pick your date(s)** and click **"Fetch Data"**
+| Field | Description |
+|-------|-------------|
+| `email` | Your Ultrahuman account email |
+| `api_key` | Your Ultrahuman API key |
+| `access_code` | Your Ultrahuman access code |
 
-### 3. Multi-User Export Tab
-#### Bulk CSV Export
-1. **Select multiple users** using checkboxes (or use "Select All")
-2. **Choose date range** (up to 30 days)
-3. **Click "Export Selected Users Data to CSV"**
-4. **Monitor progress** as data is fetched for each user/date combination
-5. **Download** the combined CSV file with all users' data
-
-### Sleep Analysis Features
-
-**Single Day View:**
-- **Bedtime Card**: Exact time you went to sleep
-- **Wake Time Card**: Exact time you woke up
-- **Sleep Duration Card**: Total hours slept
-- **Sleep Heart Rate Card**: Heart rate during sleep with interactive chart
-- **Sleep HRV Card**: Heart rate variability during sleep with chart
-
-**Multi-Day View:**
-- **Average Sleep Duration**: Across all selected nights
-- **Average Bedtime**: With consistency tracking
-- **Average Wake Time**: Sleep schedule analysis
-- **Sleep Heart Rate Trends**: Average HR during sleep
-- **Sleep HRV Trends**: Average HRV during sleep
-
-### Exporting Your Data
-
-#### Single User Export (Dashboard Tab)
-1. **Select your data** (single day or date range)
-2. **Click "Export to CSV"**
-3. **Your CSV will include:**
-   - Individual sleep metrics (bedtime, wake time, duration, HR, HRV)
-   - All other health metrics
-   - Your email for data tracking
-   - Clear data quality indicators
-
-#### Multi-User Export (Multi-User Export Tab)
-1. **Select multiple users** via checkboxes
-2. **Choose date range** (up to 30 days)
-3. **Click "Export Selected Users Data to CSV"**
-4. **CSV combines all users' data with:**
-   - User email column to identify each user's data
-   - Same detailed metrics format as single-user export
-   - All selected users' data in one comprehensive file
+To reset the database, delete `database.db` and restart the application.
 
 ---
 
-## 📈 Understanding Your Data
+## Usage
 
-### Sleep Metrics
-- **Bedtime/Wake Time**: Exact times with consistency analysis
-- **Sleep Duration**: Total time in bed
-- **Sleep Heart Rate**: Lowest and average HR during sleep
-- **Sleep HRV**: Heart rate variability zones and averages
+The dashboard has three tabs:
 
-### Heart Rate Metrics
-- **Resting HR**: Daily resting heart rate
-- **Heart Rate Trends**: Throughout the day with interactive charts
+### User Management
+Add, edit, or remove users with their Ultrahuman API credentials.
 
-### Glucose Monitoring
-- **Glucose Levels**: Blood glucose measurements
-- **Metabolic Score**: Overall metabolic health indicator
-- **Glucose Variability**: How much your glucose fluctuates
+### Single User Dashboard
+1. Select a user from the dropdown
+2. Choose Single Day or Date Range mode
+3. Select dates (or use the preset buttons: Last 7, 14, or 30 days)
+4. Click Fetch Data
 
-### Activity Metrics
-- **Steps**: Daily step count
-- **Active Minutes**: Time spent in active movement
-- **VO2 Max**: Cardiovascular fitness indicator
+The dashboard displays metric cards for sleep, heart rate, HRV, temperature, steps, and glucose. In single-day view, a sleep hypnogram shows stage progression throughout the night. In date range view, statistical summaries and a sleep architecture heatmap are displayed.
+
+### Multi-User Export
+Select multiple users, choose a date range, and export combined CSV data.
+
+### CSV Export Formats
+
+Two formats are available for both single-user and multi-user exports:
+
+**Long format**: One row per metric per date. Suited to tidy data workflows in R or Python.
+
+**Wide format**: One row per date with all metrics as columns. Suited to spreadsheet-based analysis in Excel or SPSS. Includes separate bedtime/wake date columns and Unix timestamps.
 
 ---
 
-## 🔬 Technical Notes for Researchers
+## Technical Notes for Researchers
 
-### Data Timing Clarification
+### Date References
 
-**Sleep Data Date Reference**
-- The `Date` column represents the **wake-up date** (end of sleep session)
-- Bedtime typically occurs on the **previous calendar day**
-- Example: Date = 2025-12-07 means sleep session ending on Dec 7th morning
+- The `Date` column represents the wake-up date (end of sleep session)
+- Bedtime typically occurs on the previous calendar day
 - Use `Bedtime_Date` and `Wake_Date` columns for precise date analysis
+- `Steps_Daily` represents the full calendar day count (midnight to midnight)
 
-**Steps Data Timing**
-- `Steps_Daily` represents the **full calendar day** step count (midnight to midnight)
-- For Date = 2025-12-07, steps are from 00:00 to 23:59 on Dec 7th
-- Steps and sleep data have different time windows for the same date
-
-**Unix Timestamps**
-- `Bedtime_Unix` and `Wake_Unix` provide raw unix timestamps (seconds since epoch)
-- Useful for precise time calculations and cross-system compatibility
-
-### Total Sleep: API vs Derived Values
-
-The export includes two Total Sleep measurements:
+### Total Sleep: API vs Derived
 
 | Column | Source | Calculation |
 |--------|--------|-------------|
 | `Total_Sleep_API_*` | Ultrahuman quick_metrics | Pre-calculated by Ultrahuman |
 | `Total_Sleep_Derived_*` | sleep_graph.data segments | Deep + Light + REM minutes |
 
-**Note**: These values may differ by a few minutes due to internal Ultrahuman calculations. Both are provided for researcher discretion.
+These values may differ by a few minutes due to internal Ultrahuman calculations. Both are provided for researcher discretion.
 
 ### Sleep Metric Definitions
 
@@ -425,7 +156,7 @@ The export includes two Total Sleep measurements:
 |--------|------------|
 | `Time_In_Bed` | Total duration from bedtime to wake time |
 | `Total_Sleep` | Time spent in sleep stages (Deep + Light + REM) |
-| `Sleep_Efficiency` | (Total Sleep / Time In Bed) × 100 |
+| `Sleep_Efficiency` | (Total Sleep / Time In Bed) x 100 |
 | `SOL` (Sleep Onset Latency) | Time awake at start of sleep session |
 | `WASO` (Wake After Sleep Onset) | Total wake time after first falling asleep |
 | `Wake_Episodes` | Number of awakenings after sleep onset |
@@ -433,163 +164,78 @@ The export includes two Total Sleep measurements:
 ### Data Validation
 
 Expected relationships:
-- `Deep_Sleep + Light_Sleep + REM_Sleep + Awake = Time_In_Bed` ✓
-- `SOL + WASO = Awake` ✓
-- `Total_Sleep_Derived = Deep_Sleep + Light_Sleep + REM_Sleep` ✓
+- `Deep_Sleep + Light_Sleep + REM_Sleep + Awake = Time_In_Bed`
+- `SOL + WASO = Awake`
+- `Total_Sleep_Derived = Deep_Sleep + Light_Sleep + REM_Sleep`
 
 ---
 
-## ⚡ Daily Usage
-
-### Quick Start (After Initial Setup)
-1. **Open Terminal/Command Prompt**
-2. **Navigate to your project:**
-   ```bash
-   cd ~/Desktop/ultrahuman_dashboard-main  # Mac
-   cd C:\Users\YourName\Desktop\ultrahuman_dashboard-main  # Windows
-   ```
-3. **Activate virtual environment:**
-   ```bash
-   source venv/bin/activate  # Mac
-   venv\Scripts\activate     # Windows
-   ```
-4. **Run the dashboard:**
-   ```bash
-   python src/main.py
-   ```
-5. **Open browser:** http://localhost:8000
-
-### Stopping the Dashboard
-- **Stop the server:** Press `Ctrl + C` in terminal
-- **Exit virtual environment:** Type `deactivate`
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 ultrahuman_dashboard/
-├── README.md              # This guide
-├── requirements.txt       # Python packages needed
-├── database.db           # Your personal data (AUTO-CREATED when you first run the app)
-├── .gitignore            # Protects your personal data from being uploaded
-├── src/                  # Application code
-│   ├── main.py          # Main server file (creates database automatically)
-│   ├── models/          # Database structure definitions
-│   │   └── user.py      # User table structure (id, email, api_key, access_code)
-│   ├── routes/          # API endpoints
-│   │   ├── user.py      # User management endpoints
-│   │   └── metrics.py   # Ultrahuman API data endpoints
-│   └── static/          # Web interface
-│       └── index.html   # Dashboard interface
-├── Samples/             # Example data files
-└── venv/               # Virtual environment (CREATED DURING SETUP)
+├── src/
+│   ├── main.py               # Flask application entry point
+│   ├── algorithms.py          # Circular mean, derived sleep metrics
+│   ├── models/
+│   │   └── user.py            # SQLAlchemy User model
+│   ├── routes/
+│   │   ├── user.py            # User CRUD endpoints
+│   │   └── metrics.py         # Ultrahuman API integration
+│   └── static/
+│       └── index.html         # Single-page application frontend
+├── tests/
+│   ├── test_algorithms.py     # Algorithm tests (circular mean, sleep metrics)
+│   └── test_app.py            # Flask route and model tests
+├── paper/
+│   ├── paper.md               # JOSS manuscript
+│   └── paper.bib              # References
+├── docs/
+│   └── roadmap.md             # Planned features
+├── .github/workflows/
+│   ├── tests.yml              # CI: pytest on Python 3.10-3.12
+│   └── draft-pdf.yml          # JOSS paper PDF compilation
+├── CITATION.cff               # Citation metadata
+├── CONTRIBUTING.md             # Contribution guidelines
+├── Dockerfile                  # Container deployment
+├── docker-compose.yml          # Docker Compose configuration
+├── pyproject.toml              # Package configuration
+├── requirements.txt            # Python dependencies
+└── LICENSE                     # MIT licence
 ```
-
-**Key Files Explained:**
-- **database.db**: SQLite database created automatically on first run
-- **models/user.py**: Defines the database table structure
-- **main.py**: Contains the database creation code (`db.create_all()`)
-- **.gitignore**: Ensures database.db never gets uploaded to GitHub
 
 ---
 
-## 🔧 Troubleshooting
+## Running Tests
 
-### Common Errors and Solutions
-
-**"Python not found"**
 ```bash
-# Solution: Make sure Python is installed and in PATH
-python3 --version  # Try python3 instead of python on Mac
+source venv/bin/activate
+pip install pytest
+python -m pytest tests/ -v
 ```
 
-**"Permission denied" (Windows)**
-```powershell
-# Solution: Run PowerShell as Administrator, then:
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-**"Can't access localhost:8000"**
-- Make sure the Python script is running without errors
-- Check if another app is using port 8000
-- Try restarting the dashboard
-
-**"No module named 'flask'"**
-```bash
-# Solution: Make sure virtual environment is activated
-# You should see (venv) in your terminal prompt
-pip install -r requirements.txt
-```
-
-**Database Issues**
-- The database file (`database.db`) is created automatically when you first run the app
-- It stays on your local machine and is never uploaded to GitHub
-- If corrupted, just delete it and restart the app - it will be recreated automatically
-
-### Need Help?
-
-1. **Check you completed ALL installation steps**
-2. **Verify your virtual environment is activated** (look for `(venv)` in terminal)
-3. **Read the error message carefully** - it usually tells you what's wrong
-4. **Try restarting your terminal** and starting over
-5. **Make sure you're in the correct folder** when running commands
+58 tests covering the circular mean algorithm, derived sleep metrics, Flask routes, user model, and API error handling.
 
 ---
 
-## 🔒 Privacy & Security
+## Troubleshooting
 
-- All data stays on your machine - nothing is sent to external servers
-- Database file is excluded from GitHub - your personal data never gets uploaded
-- API keys are stored locally - only you have access
-- No cloud dependencies - works completely offline after setup
+**Python not found**: Ensure Python 3.8+ is installed. On Mac, try `python3` instead of `python`.
 
----
+**No module named flask**: Activate the virtual environment first (`source venv/bin/activate`).
 
-## ✨ Features Overview
+**Cannot access localhost:8000**: Check the terminal for errors. Ensure no other application is using port 8000.
 
-### Dashboard Features
-- **Tabbed interface** with User Management, Single User Dashboard, and Multi-User Export
-- **Real-time health metrics visualization**
-- **Interactive charts with zoom and pan**
-- **Multi-day trend analysis**
-- **Clean, minimalist design**
-- **Mobile-responsive interface**
-
-### Export Features
-- **Single and multi-user CSV exports**
-- **Bulk data export** for multiple users simultaneously
-- **Individual sleep metrics as separate rows**
-- **Progress tracking** for bulk operations
-- **Data quality indicators**
-- **Date range flexibility** (up to 30 days)
-- **User email tracking** to identify data sources
-
-### Sleep Analysis
-- **Detailed sleep stage breakdown**
-- **Heart rate during sleep tracking**
-- **HRV monitoring during sleep**
-- **Sleep consistency analysis**
-- **Bedtime/wake time trends**
+**Database issues**: Delete `database.db` and restart the application.
 
 ---
 
-## 💬 Support
+## Contributing
 
-This project is designed for personal use with Ultrahuman ring data. If you encounter issues:
-
-1. **Follow the troubleshooting guide above**
-2. **Check that your Ultrahuman API credentials are correct**
-3. **Ensure your virtual environment is properly activated**
-4. **Verify all installation steps were completed**
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on reporting bugs, suggesting features, and submitting changes.
 
 ---
 
-## 📄 Licence
+## Licence
 
-This project is for personal use with Ultrahuman ring data. Keep your API credentials secure and never share them publicly.
-
----
-
-*For quick navigation, use the [Table of Contents](#table-of-contents) above to jump to specific sections.*
-
+MIT. See [LICENSE](LICENSE) for details.

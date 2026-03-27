@@ -1,12 +1,12 @@
 ---
-title: 'Ultrahuman Dashboard: An Open-Source, Privacy-First Web Application for Visualising and Exporting Wearable Ring Health Data'
+title: 'Ultrahuman Dashboard: An Open-Source Web Application for Visualising and Exporting Wearable Ring Health Data'
 tags:
   - Python
   - wearable sensors
   - sleep analysis
   - heart rate variability
   - health informatics
-  - privacy-preserving analytics
+  - local data processing
 authors:
   - name: Haresh Suppiah
     orcid: 0000-0001-9828-2349
@@ -26,9 +26,9 @@ bibliography: paper.bib
 
 # Summary
 
-The Ultrahuman Dashboard is an open-source Python web application that provides researchers and practitioners with a local, privacy-first interface for visualising, analysing, and exporting health metrics collected by the Ultrahuman Ring wearable device. Built on Flask with a Chart.js frontend, the dashboard retrieves data via the Ultrahuman Partnership API and presents interactive visualisations of sleep architecture, heart rate, heart rate variability (HRV), skin temperature, daily steps, and glucose metrics. All data processing occurs locally and no information is transmitted to external servers beyond the original API call.
+The Ultrahuman Dashboard is an open-source Python web application that provides researchers and practitioners with a local interface for visualising, analysing, and exporting health metrics collected by the Ultrahuman Ring wearable device. Built on Flask with a Chart.js frontend, the dashboard retrieves data via the Ultrahuman Partnership API and presents interactive visualisations of sleep architecture, heart rate, heart rate variability (HRV), skin temperature, daily steps, and glucose metrics. All data processing occurs locally and no information is transmitted to external servers beyond the original API call.
 
-The application derives research-grade sleep metrics from raw sleep stage segments, including sleep onset latency (SOL), wake after sleep onset (WASO), and the number of wake episodes, using clinically standard definitions aligned with the American Academy of Sleep Medicine [@berry2017aasm]. A circular mean algorithm [@fisher1993; @mardia2000] is implemented for averaging bedtimes and wake times across multiple nights, correctly handling the midnight boundary problem that causes arithmetic averaging to fail for time of day data. Dual CSV export formats (long and wide) support direct import into statistical software for research workflows.
+The application derives standard sleep metrics from raw sleep stage segments, including sleep onset latency (SOL), wake after sleep onset (WASO), and the number of wake episodes, using clinically standard definitions aligned with the American Academy of Sleep Medicine [@berry2017aasm]. A circular mean algorithm [@fisher1993; @mardia2000] is implemented for averaging bedtimes and wake times across multiple nights, correctly handling the midnight boundary problem that causes arithmetic averaging to fail for time of day data. Dual CSV export formats (long and wide) support direct import into statistical software for research workflows.
 
 # Statement of Need
 
@@ -68,7 +68,7 @@ The software is designed for extensibility. The modular route structure and stan
 
 # AI Usage Disclosure
 
-Generative AI tools (Claude, Anthropic) were used during development to assist with code scaffolding, test suite generation, and documentation drafting. All AI-generated outputs were reviewed, edited, and validated by the authors. The core software design decisions, algorithmic implementations (circular mean, derived sleep metrics), and architectural choices were made by the human authors. The research direction, clinical definitions, and scholarly content of this paper reflect the authors' domain expertise.
+Generative AI tools were used during development to assist with code scaffolding, test suite generation, and documentation drafting. The research direction, clinical definitions, and scholarly content of this paper reflect the authors' domain expertise.
 
 # Acknowledgements
 
