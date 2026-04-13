@@ -14,12 +14,10 @@ authors:
     affiliation: 1
   - name: Matthew W. Driller
     orcid: 0000-0002-9990-8830
-    affiliation: 2
+    affiliation: 1
 affiliations:
   - name: Sport and Exercise Science, School of Allied Health, Human Services and Sport, La Trobe University, Melbourne, Australia
     index: 1
-  - name: Sport and Exercise Science, School of Allied Health, Human Services and Sport, La Trobe University, Melbourne, Australia
-    index: 2
 date: 26 March 2026
 bibliography: paper.bib
 ---
@@ -60,15 +58,15 @@ Data export supports two formats: a long format (one row per metric per date) su
 
 # Research Impact
 
-The Ultrahuman Dashboard enables researchers to collect and analyse wearable ring data while satisfying ethics committee requirements for local data storage. The software has been archived on Zenodo [@suppiah2024zenodo] under the MIT licence, following FAIR data principles [@wilkinson2016] and software citation standards [@smith2016]. The derived sleep metrics (SOL, WASO, wake episodes) and the circular mean algorithm for time averaging are applicable to any wearable sleep monitoring study, regardless of device manufacturer.
+The Ultrahuman Dashboard enables researchers to collect and analyse wearable ring data while satisfying ethics committee requirements for local data storage. The software has been archived on Zenodo [@suppiah2025zenodo] under the MIT licence, following FAIR data principles [@wilkinson2016] and software citation standards [@smith2016]. The derived sleep metrics (SOL, WASO, wake episodes) and the circular mean algorithm for time averaging are applicable to any wearable sleep monitoring study, regardless of device manufacturer. The dashboard is currently deployed in the authors' laboratory to support longitudinal data collection across several ongoing sleep and recovery studies in athletic populations, with multi-user bulk export used to manage participant cohorts.
 
 The dual export format design supports both exploratory analysis and formal statistical workflows. The wide format CSV can be imported directly into SPSS or Excel for clinical reporting, while the long format aligns with tidy data principles used in R and Python. Multi-user bulk export enables research teams to extract data for entire participant cohorts in a single operation.
 
-The software is designed for extensibility. The modular route structure and standardised data processing pipeline can be adapted to support other wearable devices that provide similar API access. The Python implementations of the circular mean and sleep metric algorithms in `src/algorithms.py` are independently testable and reusable outside the dashboard context, with a comprehensive test suite of 57 automated tests covering both the algorithms and the Flask application.
+The software is designed for extensibility. The modular route structure and standardised data processing pipeline can be adapted to support other wearable devices that provide similar API access. The Python implementations of the circular mean and sleep metric algorithms in `src/algorithms.py` are independently testable and reusable outside the dashboard context, with a comprehensive test suite of 58 automated tests covering both the algorithms and the Flask application.
 
 # AI Usage Disclosure
 
-Generative AI tools were used during development to assist with code scaffolding, test suite generation, and documentation drafting. The research direction, clinical definitions, and scholarly content of this paper reflect the authors' domain expertise.
+Generative AI tools were used during development of both the software and this paper. Specifically, Claude Code (Anthropic), using Claude Sonnet and Claude Opus models released during the development period (May 2025 to March 2026), assisted with code scaffolding and refactoring in `src/`, generation of the `tests/` suite, drafting of `README.md` and `docs/`, and initial drafting and copy-editing of sections of this paper. All AI-assisted outputs were reviewed, edited, and validated by the authors through manual code inspection, execution of the automated test suite, and scholarly revision of the paper text. The research direction, clinical definitions, algorithmic choices, and all core design decisions reflect the authors' domain expertise, and the authors accept full responsibility for the accuracy, originality, licensing, and ethical compliance of the final submission.
 
 # Acknowledgements
 
